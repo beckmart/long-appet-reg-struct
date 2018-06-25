@@ -1,0 +1,285 @@
+---
+title: "BehavioralResults"
+author: "Rebecca Martin"
+date: "6/23/2018"
+output: 
+    github_document:
+        df_print: 'paged'
+        toc: true
+        dev: png
+    html_document:
+        df_print: 'paged'
+        toc: true
+        toc_float:
+            collapsed: false
+            smooth_scroll: true
+        number_sections: true
+        code_download: true
+        self_contained: true
+        code_folding: 'hide'
+---
+
+## Settings
+
+```{r settings}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+
+```{r setDirs}
+root <- rprojroot::find_rstudio_root_file()
+dataDir <- file.path(root, 'data')
+codeDir <- file.path(root, 'code')
+figureDir <- file.path(root, 'figures')
+```
+
+## Packages
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(bmlm)
+library(arm)
+```
+
+## Read in data
+
+```{r readData}
+appAvgLong <- read.table(file.path(dataDir,"app_avg_long.txt"), header=TRUE, sep="\t") ## for graphing 
+appAvgWide <- read.table(file.path(dataDir,"app_avg_wide.txt"), header=TRUE, sep="\t")
+demographicsLong <- read.table(file.path(dataDir,"demographicsLong.txt"), header=TRUE, sep="\t")
+appBehavLongRaw <- read.table(file.path(dataDir,"app_behav_long.txt"), header=TRUE, sep="\t")
+
+# For BMI measurements
+asegLong <- read.table(file.path(dataDir,"asegLong.txt"), header=TRUE, sep="\t")
+```
+
+## Clean and center data
+
+```{r}
+## Merge dataframes by id and phase
+appLongAll <- merge(appBehavLongRaw, demographicsLong, by=c('ID', 'Phase'))
+aseg2TPbehav <- merge(appAvgLong, asegLong, by=c('ID', 'Phase'))
+
+## Bad subs: 10744, 13078, 1136
+appAvgLong <- appAvgLong %>% dplyr::filter(ID != 10744, ID!= 13078, ID != 1136)
+appAvgWide <- appAvgWide %>% dplyr::filter(ID != 10744, ID!= 13078, ID != 1136)
+appLongAll <- appLongAll %>% dplyr::filter(ID != 10744, ID!= 13078, ID != 1136)
+
+appAvgLongReduced <- appAvgLong %>% dplyr::select(Reactivity=Close, Regulation=Far, Age, fsid) %>% gather(key=Type, value=Rating, -fsid, -Age)
+
+## Center data
+appLongAll$AgeCent <- appLongAll$Age - mean(appLongAll$Age)
+appLongAll$AgeSq <- appLongAll$AgeCent*appLongAll$AgeCent
+appLongAll$AgeCu <- appLongAll$AgeCent*appLongAll$AgeCent*appLongAll$AgeCent
+
+# Make Close and Far subsets for averaged and long data frames
+appLongAvgClose <- appAvgLongReduced %>% filter(Type=="Reactivity")
+appLongAvgFar <- appAvgLongReduced %>% filter(Type=="Regulation")
+
+appLongClose <- appLongAll %>% filter(Type=="Close")
+appLongFar <- appLongAll %>% filter(Type=="Far")
+```
+
+## Prep Graphs
+
+```{r, make_theme, echo=FALSE, results='hide', message=FALSE}
+
+beckys.theme.conference = theme(panel.background = element_rect(fill='transparent'), #color="black"
+                        axis.line = element_line(color='black'),
+                        panel.grid.minor = element_line(color='transparent'),
+                        panel.grid.major=element_line(color="transparent"),
+                        axis.title.x = element_text(size=24,face = "bold"),
+                        axis.title.y = element_text(size=24, vjust=1, face = "bold"),
+                        axis.text.x = element_text(size=16, colour="black"),
+                        axis.text.y = element_text(size=16, colour="black"),
+                        legend.text=element_text(size=16),
+                        strip.text.y = element_text(size = 16, face="bold"),
+                        strip.text.x = element_text(size = 16, face="bold"),
+                        legend.title = element_text(face="bold"),
+                        axis.line.x=element_line(color = 'black'), 
+                        axis.line.y=element_line(color = 'black'))
+```
+
+# Graphing
+
+## Make longitudinal graph
+
+```{r}
+demographicsPlotter <- appAvgLong %>% 
+    mutate(Age=as.numeric(as.character(Age))) %>% 
+    group_by(fsid) %>% 
+    mutate(AgeMin=min(Age), AgeMax=max(Age)) %>% 
+    ungroup() %>% 
+    arrange(AgeMin) %>% 
+    mutate(subjid=factor(fsid, levels=unique(fsid)))
+
+ggplot(demographicsPlotter) + geom_errorbarh(aes(xmin=AgeMin, y=subjid, xmax=AgeMax, x=Age, group=fsid), height=0) + geom_point(aes(x=Age, y=subjid, group=fsid)) + ylab(NULL) + beckys.theme.conference + theme(axis.text.y=element_blank(), axis.ticks.y=element_blank(), panel.grid.major=element_blank(), panel.grid.minor=element_blank()) + xlim(5,26)
+
+#ggsave("figures/demographics.pdf", width=7, height=5, dpi=300)
+```
+
+## Run regressions for behav figure
+
+```{r}
+## Effect of Age and Close/Far
+### Close Regression
+closeBehavRes <- lmer(Rating ~ AgeCent + (1 | fsid), data=appLongClose)
+summary(closeBehavRes)
+
+## Far Regression
+farBehavRes <- lmer(Rating ~ AgeCent + (1 | fsid), data=appLongFar)  
+summary(farBehavRes)
+
+### Combined Regression
+bothBehavRes <- lmer(Rating ~ AgeCent + Type + (Type | fsid), data=appLongAll) 
+summary(bothBehavRes)
+
+### Interaction of Strategy and Age
+bothBehavResInt <- lmer(Rating ~ Type*AgeCent + (Type | fsid), data=appLongAll)
+summary(bothBehavResInt)
+
+### BMI
+summary(BMIClose <- lmer(Close ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
+summary(BMIFar <- lmer(Far ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
+```
+
+## Get fixed effect lines and confidence bands for Close and Far
+
+```{r}
+## for 95% confidence intervals change probs to 2.5 and 97.5 #90% = .05, .95
+fitted.mer <- function(mod, nsim=100, probs=c(.025, .975), re.form=NULL)
+{
+    if(length(probs) != 2)
+    {
+        stop('probs must have two numbers, a lower and an upper bound')
+    }
+    
+    predictThis <- function(x)
+    {
+        predict(x, re.form=re.form)
+    }
+    
+    # compute bootstrapped predictions
+    thePreds <- bootMer(mod, FUN=predictThis, nsim=nsim, re.form=re.form)
+    
+    # get the quantiles for each prediction and transpose to nice, row format
+    theBounds <- apply(thePreds$t, 2, quantile, probs=probs) %>% t
+    
+    # combine the predictions and the quantils for each prediction and give names and make a tibble
+    cbind(thePreds$t0, theBounds) %>% 
+        as.data.frame %>% 
+        setNames(c('Prediction', 'Lower', 'Upper')) %>% 
+        tibble::as_tibble()
+}
+
+closeBehavResAvg <- lmer(Rating ~ Age + (1|fsid), data=appLongAvgClose)
+farBehavResAvg <- lmer(Rating ~ Age + (1|fsid), data=appLongAvgFar)
+
+closePreds <- fitted.mer(closeBehavResAvg, nsim=400, re.form=NA)
+farPreds <- fitted.mer(farBehavResAvg, nsim=400, re.form=NA)
+
+appLongClosePred <- bind_cols(appLongAvgClose, closePreds) %>% tibble::as_tibble()
+appLongFarPred <- bind_cols(appLongAvgFar, farPreds) %>% tibble::as_tibble()
+
+appLongAllPred <- bind_rows("Reactivity"=appLongClosePred, 
+                            "Regulation"=appLongFarPred, 
+                            .id='TrialType')
+
+```
+
+## Graph behav ME figure (longitudinal lines with smoothed fixed effects lines for close and far)
+
+```{r}
+ggplot(appLongAllPred, aes(x=Age)) + 
+    #geom_smooth(aes(color=Type, fill=Type), level=.95, method='lm') +
+    geom_point(aes(y=Rating, color=Type), size=1, alpha=.5) +
+    geom_line(aes(y=Rating, group=fsid, color=Type), alpha=.5, size=.75) + 
+    geom_ribbon(aes(ymin=Lower, ymax=Upper, fill=Type), alpha=.4) + 
+    geom_line(aes(y=Prediction, color=Type), size=1) + 
+    facet_wrap(~Type) + 
+    beckys.theme.conference +
+    ylab("Rating of Craving") + 
+    ylim(1,5) +
+    xlim(5,26) +
+    scale_color_brewer(palette="Set1") + scale_fill_brewer(palette="Set1") +
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", legend.title=element_blank())
+
+#ggsave("figures/BehavMainEffects.pdf", width=10, height=5, dpi=300)
+#ggsave("figures/BehavMainEffectsDiss.pdf", width=10, height=5, dpi=300)
+```
+
+# Run regressions 
+
+## What is the shape of the behavioral changes? 
+
+```{r}
+### Close Regression
+closeNull <-  lmer(Rating ~ 1 + (1 | fsid), data=appLongClose)
+closeBehav <- lmer(Rating ~ AgeCent + (1 | fsid), data=appLongClose)
+closeBehavSq <- lmer(Rating ~ AgeCent + AgeSq + (1 | fsid), data=appLongClose)
+closeBehavCu <- lmer(Rating ~ AgeCent + AgeSq + AgeCu + (1 | fsid), data=appLongClose)
+
+anova(closeNull, closeBehav, closeBehavSq, closeBehavCu)
+
+## Far Regression
+farNull <- lmer(Rating ~ 1 + (1 | fsid), data=appLongFar) 
+farBehav <- lmer(Rating ~ AgeCent + (1 | fsid), data=appLongFar)  
+farBehavSq <- lmer(Rating ~ AgeCent + AgeSq + (1 | fsid), data=appLongFar) 
+farBehavCu <- lmer(Rating ~ AgeCent + AgeSq + AgeCu + (1 | fsid), data=appLongFar) 
+
+anova(farNull, farBehav, farBehavSq, farBehavCu)
+```
+
+# Look at Annualized Change
+
+## Make Data Long
+
+```{r prepper}
+appToPlot <- appAvgWide %>% 
+    # only keep columns we care about
+    dplyr::select(ID, Age_T1, CloseAnn, FarAnn) %>% 
+    # make the data long, creating a column for both long and far, keeping Age and TimeElapsed separate
+    gather(Type, DiffAnnual, CloseAnn, FarAnn) %>% 
+    # group by subjid and Type so we can get proper lagged values 
+    mutate(Type=ifelse(Type == 'CloseAnn', 'Reactivity', 'Regulation'))
+```
+
+## Plot Annualized Change
+
+```{r plotter}
+ggplot(appToPlot, aes(x=Age_T1, y=DiffAnnual)) + 
+    geom_hline(yintercept=0, linetype="dashed", color="darkgrey") +
+    geom_smooth(aes(color=Type, fill=Type), level=.9,  method="lm", fullrange=TRUE) + 
+    geom_point(aes(color=Type), alpha=.3) + 
+    facet_wrap(~Type) + 
+    xlab("Age at Time 1") +
+    ylab('Annualized Rating Change') +
+    xlim(5,26) +
+    theme(legend.position='none') + 
+    beckys.theme.conference + 
+    scale_color_brewer(palette="Set1") +
+    scale_fill_brewer(palette="Set1") 
+
+#ggsave("figures/AnnualizedChange.pdf", width=10, height=6, dpi=300)
+```
+
+## Does annualized change differ with age? 
+
+```{r}
+closeAnnMod <- lm(CloseAnn ~ Age_T1, data=appAvgWide)
+summary(closeAnnMod)
+
+farAnnMod <- lm(FarAnn ~ Age_T1, data=appAvgWide)
+summary(farAnnMod)
+
+## Nope!!
+
+## Cool interaction with parent income and close though
+closeAnnParentInc <- lm(CloseAnn ~ Age_T1*ParentIncome_T1, data=appAvgWide)
+summary(closeAnnParentInc)
+```
+
+
