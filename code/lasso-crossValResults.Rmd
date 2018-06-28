@@ -258,7 +258,7 @@ allRegions <- readr::read_csv(here('data', 'AllRegionsRaw.csv')) %>%
 A sample of the data.
 
 ```{r show-data-all,dependson=c('read-data-all', 'dt-func')}
-makeDT(allRegions %>% sample_frac(0.10), elementId='DataAllRaw')
+#makeDT(allRegions %>% sample_frac(0.10), elementId='DataAllRaw')
 ```
 
 # Model Prep {#model-prep}
