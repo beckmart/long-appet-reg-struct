@@ -312,7 +312,7 @@ We view the coefficient path, error curve and coefplot for both `lambda.1se` and
 
 ``` r
 #pathSimple(all1, elementId='all1_mod') ## this makes interactive graphs. github doesn't like them b/c they are html widgets so we're using plot instead to make static graphs
-plot(all1$glmnet.fit)
+plot(all1$glmnet.fit, xvar = "lambda")
 ```
 
 ![](lasso-crossValResults_files/figure-markdown_github/all1-error-curve-1.png)
@@ -339,7 +339,7 @@ We view the coefficient path, error curve and coefplot for both `lambda.1se` and
 
 ``` r
 #pathSimple(all2, elementId='all2_mod')
-plot(all2$glmnet.fit)
+plot(all2$glmnet.fit, xvar = "lambda")
 ```
 
 ![](lasso-crossValResults_files/figure-markdown_github/all2-error-curve-1.png)
@@ -366,7 +366,7 @@ We view the coefficient path, error curve and coefplot for both `lambda.1se` and
 
 ``` r
 #pathSimple(all3, elementId='all3_mod')
-plot(all3$glmnet.fit)
+plot(all3$glmnet.fit, xvar = "lambda")
 ```
 
 ![](lasso-crossValResults_files/figure-markdown_github/all3-error-curve-1.png)
@@ -393,7 +393,7 @@ We view the coefficient path, error curve and coefplot for both `lambda.1se` and
 
 ``` r
 #pathSimple(all4, elementId='all4_mod')
-plot(all4$glmnet.fit)
+plot(all4$glmnet.fit, xvar = "lambda")
 ```
 
 ![](lasso-crossValResults_files/figure-markdown_github/all4-error-curve-1.png)
