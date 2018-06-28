@@ -444,17 +444,21 @@ ageOnly_mod <- lmer(ageOnly_formula,
 AIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"5733.397","_rn_":"null_mod"},{"1":"34","2":"5675.691","_rn_":"all4NoAge_mod"},{"1":"35","2":"5666.497","_rn_":"all4PlusAge_mod"},{"1":"4","2":"5675.648","_rn_":"ageOnly_mod"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+    ##                 df      AIC
+    ## null_mod         3 5733.397
+    ## all4NoAge_mod   34 5675.691
+    ## all4PlusAge_mod 35 5666.497
+    ## ageOnly_mod      4 5675.648
 
 ``` r
 BIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["BIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"5749.880","_rn_":"null_mod"},{"1":"34","2":"5862.502","_rn_":"all4NoAge_mod"},{"1":"35","2":"5858.802","_rn_":"all4PlusAge_mod"},{"1":"4","2":"5697.626","_rn_":"ageOnly_mod"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+    ##                 df      BIC
+    ## null_mod         3 5749.880
+    ## all4NoAge_mod   34 5862.502
+    ## all4PlusAge_mod 35 5858.802
+    ## ageOnly_mod      4 5697.626
 
 ``` r
 # Print list of variables
