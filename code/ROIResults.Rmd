@@ -1,0 +1,211 @@
+---
+title: "Regulation ROI Analysis"
+author: "Rebecca Martin"
+date: "6/24/2018"
+output: 
+    github_document:
+        df_print: 'paged'
+        toc: true
+        dev: png
+    html_document:
+        df_print: 'paged'
+        toc: true
+        toc_float:
+            collapsed: false
+            smooth_scroll: true
+        number_sections: true
+        code_download: true
+        self_contained: true
+        code_folding: 'hide'
+---
+
+Note: this is not a final version and should be cleaned and proofread.
+
+## Settings
+
+```{r settings}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+```{r setDirs}
+root <- rprojroot::find_rstudio_root_file()
+dataDir <- file.path(root, 'data')
+codeDir <- file.path(root, 'code')
+figureDir <- file.path(root, 'figures')
+```
+
+## Packages
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(bmlm)
+library(arm)
+```
+
+## Read in data
+
+```{r readData}
+## Behavioral
+appAvgLong <- read.table(file.path(dataDir,"app_avg_long.txt"), header=TRUE, sep="\t") ## for graphing 
+appAvgWide <- read.table(file.path(dataDir,"app_avg_wide.txt"), header=TRUE, sep="\t")
+demographicsLong <- read.table(file.path(dataDir,"demographicsLong.txt"), header=TRUE, sep="\t")
+appBehavLongRaw <- read.table(file.path(dataDir,"app_behav_long.txt"), header=TRUE, sep="\t")
+
+## Far ROI
+far2TP <- read.table(file.path(dataDir, "far_2TP_combined_reduced.txt"), header=TRUE, sep="\t")
+farRates <- read.table(file.path(dataDir, "farRates_reduced.txt"), header=TRUE, sep="\t")
+```
+
+## Merge ROI data with behavioral data and add age terms
+
+```{r Merge}
+appAvgLongROIs <- merge(appAvgLong, far2TP, by=c("fsid", "Phase"))
+
+appAvgLongROIs$AgeCent <- appAvgLongROIs$Age - mean(appAvgLongROIs$Age)
+appAvgLongROIs$AgeCentSq <- appAvgLongROIs$AgeCent*appAvgLongROIs$AgeCent
+appAvgLongROIs$AgeCentCu <- appAvgLongROIs$AgeCent*appAvgLongROIs$AgeCent*appAvgLongROIs$AgeCent
+
+appAvgLongReduced <- appAvgLongROIs %>% dplyr::select(Reactivity=Close, Regulation=Far, Age, fsid, Phase, Gender, rACC=rostralanteriorcingulate_lh, dmPFC=superiorfrontal_rh, dlPFC=rostralmiddlefrontal_lh, vlPFC=parsopercularis_rh) %>% gather(key=ROI, value=Thickness, -fsid, -Age, -Phase, -Gender, -Reactivity, -Regulation)
+
+appWideROIRates <- merge(appAvgWide,farRates, by="fsid")
+```
+
+## Prep Graphs
+
+```{r, make_theme, echo=FALSE, results='hide', message=FALSE}
+
+beckys.theme.conference = theme(panel.background = element_rect(fill='transparent'), #color="black"
+                        axis.line = element_line(color='black'),
+                        panel.grid.minor = element_line(color='transparent'),
+                        panel.grid.major=element_line(color="transparent"),
+                        axis.title.x = element_text(size=24,face = "bold"),
+                        axis.title.y = element_text(size=24, vjust=1, face = "bold"),
+                        axis.text.x = element_text(size=16, colour="black"),
+                        axis.text.y = element_text(size=16, colour="black"),
+                        legend.text=element_text(size=16),
+                        strip.text.y = element_text(size = 16, face="bold"),
+                        strip.text.x = element_text(size = 16, face="bold"),
+                        legend.title = element_text(face="bold"),
+                        axis.line.x=element_line(color = 'black'), 
+                        axis.line.y=element_line(color = 'black'))
+```
+
+# Cortical ROIs
+
+## Plot GLM clusters
+
+```{r plotGLM}
+ggplot(appAvgLongReduced, aes(x=Age, y=Thickness)) +
+    geom_line(aes(y=Thickness, group=fsid), alpha=.5, size=.75) + 
+    geom_point(aes(y=Thickness), size=1, alpha=.5) +
+    geom_smooth(method='lm', color="black", ) +
+    facet_wrap(~ROI, ncol=2) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    ylab("Cortical Thickness (mm)") +
+    xlim(5,26) +
+    #ylim(0,4) +
+    scale_color_brewer(palette="Set1") +     scale_fill_brewer(palette="Set1") +
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", legend.title=element_blank(), strip.text.y = element_text(size = 14, face="bold"),
+                        strip.text.x = element_text(size = 14, face="bold"),)
+
+#ggsave("figures/AgeROI.pdf", width=7, height=5, dpi=300)
+#ggsave("figures/AgeROIDiss.pdf", width=7, height=5, dpi=300)
+```
+
+## Cortical cluster statistics
+
+### What is the shape of change in these ROIs? 
+
+#### RACC
+```{r corticalStatsrAcc}
+summary(nullModrAcc <- lmer(rostralanteriorcingulate_lh ~ 1 + (1|fsid), data=appAvgLongROIs))
+summary(linModrAcc <- lmer(rostralanteriorcingulate_lh ~ AgeCent + (1|fsid), data=appAvgLongROIs))
+summary(quadModrAcc <- lmer(rostralanteriorcingulate_lh ~ AgeCent + AgeCentSq + (1|fsid), data=appAvgLongROIs))
+summary(cubModrAcc <- lmer(rostralanteriorcingulate_lh ~ AgeCent + AgeCentSq + AgeCentCu + (1|fsid), data=appAvgLongROIs))
+AIC(nullModrAcc, linModrAcc, quadModrAcc, cubModrAcc)
+```
+
+#### dmPFC  
+```{r corticalStatsdmPFC}
+summary(nullModdmPFC <- lmer(superiorfrontal_rh ~ 1 + (1|fsid), data=appAvgLongROIs))
+summary(linModdmPFC <- lmer(superiorfrontal_rh ~ AgeCent + (1|fsid), data=appAvgLongROIs))
+summary(quadModdmPFC <- lmer(superiorfrontal_rh ~ AgeCent + AgeCentSq + (1|fsid), data=appAvgLongROIs))
+summary(cubModdmPFC <- lmer(superiorfrontal_rh ~ AgeCent + AgeCentSq + AgeCentCu + (1|fsid), data=appAvgLongROIs))
+AIC(nullModdmPFC, linModdmPFC, quadModdmPFC, cubModdmPFC)
+```
+
+#### dlPFC 
+```{r corticalStatsdlPFC}
+summary(nullModdlPFC <- lmer(rostralmiddlefrontal_lh ~ 1 + (1|fsid), data=appAvgLongROIs))
+summary(linModdlPFC <- lmer(rostralmiddlefrontal_lh ~ AgeCent + (1|fsid), data=appAvgLongROIs))
+summary(quadModdlPFC <- lmer(rostralmiddlefrontal_lh ~ AgeCent + AgeCentSq + (1|fsid), data=appAvgLongROIs))
+summary(cubModdlPFC <- lmer(rostralmiddlefrontal_lh ~ AgeCent + AgeCentSq + AgeCentCu + (1|fsid), data=appAvgLongROIs))
+AIC(nullModdlPFC, linModdlPFC, quadModdlPFC, cubModdlPFC)
+```
+
+#### vlPFC 
+```{r corticalStatsvlPFC}
+summary(nullModvlPFC <- lmer(parsopercularis_rh ~ 1 + (1|fsid), data=appAvgLongROIs))
+summary(linModvlPFC <- lmer(parsopercularis_rh ~ AgeCent + (1|fsid), data=appAvgLongROIs))
+summary(quadModvlPFC <- lmer(parsopercularis_rh ~ AgeCent + AgeCentSq + (1|fsid), data=appAvgLongROIs))
+summary(cubModvlPFC <- lmer(parsopercularis_rh ~ AgeCent + AgeCentSq + AgeCentCu + (1|fsid), data=appAvgLongROIs))
+AIC(nullModvlPFC, linModvlPFC, quadModvlPFC, cubModvlPFC)
+```
+
+### Rates of change 
+
+## Does change in thickness predict change in behavior? 
+
+#### rACC
+```{r}
+## Thickness and behav rate change
+summary(changethickbehav <- lm(FarAnn ~ rostralanteriorcingulate_lh_diffAnn, data=appWideROIRates))
+
+## Age and thickness rate change? 
+summary(changethickAge <- lm(rostralanteriorcingulate_lh_diffAnn ~ Age_T1, data=appWideROIRates))
+
+### Age X Rate interactions on behavior?
+summary(changeInt <- lm(FarAnn ~  rostralanteriorcingulate_lh_diffAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+#### dmPFC
+```{r}
+## Thickness and behav rate change
+summary(changethickbehav <- lm(FarAnn ~ superiorfrontal_rh_diffAnn, data=appWideROIRates))
+
+## Age and thickness rate change? 
+summary(changethickAge <- lm(superiorfrontal_rh_diffAnn ~ Age_T1, data=appWideROIRates))
+
+### Age X Rate interactions on behavior?
+summary(changeInt <- lm(FarAnn ~  superiorfrontal_rh_diffAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+#### dlPFC
+```{r}
+## Thickness and behav rate change
+summary(changethickbehav <- lm(FarAnn ~ rostralmiddlefrontal_lh_diffAnn, data=appWideROIRates))
+
+## Age and thickness rate change? 
+summary(changethickAge <- lm(rostralmiddlefrontal_lh_diffAnn ~ Age_T1, data=appWideROIRates))
+
+### Age X Rate interactions on behavior?
+summary(changeInt <- lm(FarAnn ~  rostralmiddlefrontal_lh_diffAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+#### vlPFC
+```{r}
+## Thickness and behav rate change
+summary(changethickbehav <- lm(FarAnn ~ parsopercularis_rh_diffAnn, data=appWideROIRates))
+
+## Age and thickness rate change? 
+summary(changethickAge <- lm(parsopercularis_rh_diffAnn ~ Age_T1, data=appWideROIRates))
+
+### Age X Rate interactions on behavior?
+summary(changeInt <- lm(FarAnn ~  parsopercularis_rh_diffAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+

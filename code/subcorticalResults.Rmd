@@ -1,0 +1,561 @@
+---
+title: "Subcortical Analysis"
+author: "Rebecca Martin"
+date: "6/24/2018"
+output: 
+    github_document:
+        df_print: 'paged'
+        toc: true
+        dev: png
+    html_document:
+        df_print: 'paged'
+        toc: true
+        toc_float:
+            collapsed: false
+            smooth_scroll: true
+        number_sections: true
+        code_download: true
+        self_contained: true
+        code_folding: 'hide'
+---
+
+Note: this script needs to be proofread and cleaned up and is not a final version
+
+
+## Settings
+
+```{r settings}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+```{r setDirs}
+root <- rprojroot::find_rstudio_root_file()
+dataDir <- file.path(root, 'data')
+codeDir <- file.path(root, 'code')
+figureDir <- file.path(root, 'figures')
+```
+
+## Packages
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(bmlm)
+library(arm)
+```
+
+## Read in data
+
+```{r readData}
+## Behavioral
+appAvgLong <- read.table(file.path(dataDir,"app_avg_long.txt"), header=TRUE, sep="\t") ## for graphing 
+appAvgWide <- read.table(file.path(dataDir,"app_avg_wide.txt"), header=TRUE, sep="\t")
+demographicsLong <- read.table(file.path(dataDir,"demographicsLong.txt"), header=TRUE, sep="\t")
+appBehavLongRaw <- read.table(file.path(dataDir,"app_behav_long.txt"), header=TRUE, sep="\t")
+
+# Subcortical ROIs
+asegLong <- read.table(file.path(dataDir,"asegLong.txt"), header=TRUE, sep="\t")
+asegRate <- read.table(file.path(dataDir, "appAsegRate.txt"), header=TRUE, sep="\t")
+aseg2TPWide <- read.table(file.path(dataDir, "aseg2TPwide.txt"), header=TRUE, sep="\t")
+```
+
+## Merge ROI data with behavioral data, add age terms, and center (zscore) subcortical values
+
+```{r Merge}
+## Merge data
+appLongAll <- merge(appBehavLongRaw, demographicsLong, by=c('ID', 'Phase'))
+asegLongPlusBehav <- merge(appLongAll, asegLong, by=c('ID', 'Phase'))
+asegLongPlusBehav2TP <- merge(appLongAll, asegLong, by=c('ID', 'Phase'))
+aseg2TPbehav <- merge(appAvgLong, asegLong, by=c('ID', 'Phase'))
+asegRatePlusBehav <- merge(appAvgWide, asegRate, by=c("ID","fsid"))
+aseg2TPWideBehav <- merge(appAvgWide, aseg2TPWide, by=c('fsid'))
+
+## Age Terms
+aseg2TPbehav$AgeCent <- scale(aseg2TPbehav$Age, scale=FALSE)
+aseg2TPbehav$AgeCent <- as.numeric(aseg2TPbehav$AgeCent)
+aseg2TPbehav$AgeCentSq <- aseg2TPbehav$AgeCent*aseg2TPbehav$AgeCent
+aseg2TPbehav$AgeCentCu <- aseg2TPbehav$AgeCent*aseg2TPbehav$AgeCent*aseg2TPbehav$AgeCent
+
+asegLongPlusBehav$AgeCent <- scale(asegLongPlusBehav$Age, scale=FALSE)
+asegLongPlusBehav$AgeCent <- as.numeric(asegLongPlusBehav$AgeCent)
+asegLongPlusBehav$AgeCentSq <- asegLongPlusBehav$AgeCent*asegLongPlusBehav$AgeCent
+asegLongPlusBehav$AgeCentCu <- asegLongPlusBehav$AgeCent*asegLongPlusBehav$AgeCent*asegLongPlusBehav$AgeCent
+
+## Scale Volumes
+aseg2TPbehav$RHNAccScaled <- scale(aseg2TPbehav$Right.Accumbens.area)
+aseg2TPbehav$LHNAccScaled <- scale(aseg2TPbehav$Left.Accumbens.area)
+aseg2TPbehav$ETivCrossScaled <- scale(aseg2TPbehav$ETivCross)
+aseg2TPbehav$LHWBVScaled <- scale(aseg2TPbehav$lhCortexVol)
+aseg2TPbehav$RHWBVScaled <- scale(aseg2TPbehav$rhCortexVol)
+aseg2TPbehav$RHNAccScaled <- as.numeric(aseg2TPbehav$RHNAccScaled)
+aseg2TPbehav$LHNAccScaled <- as.numeric(aseg2TPbehav$LHNAccScaled)
+aseg2TPbehav$ETivCrossScaled <- as.numeric(aseg2TPbehav$ETivCrossScaled)
+aseg2TPbehav$LHWBVScaled <- as.numeric(aseg2TPbehav$LHWBVScaled)
+aseg2TPbehav$RHWBVScaled <- as.numeric(aseg2TPbehav$RHWBVScaled)
+
+asegLongPlusBehav$RHNAccScaled <- scale(asegLongPlusBehav$Right.Accumbens.area)
+asegLongPlusBehav$LHNAccScaled <- scale(asegLongPlusBehav$Left.Accumbens.area)
+asegLongPlusBehav$ETivCrossScaled <- scale(asegLongPlusBehav$ETivCross)
+asegLongPlusBehav$LHWBVScaled <- scale(asegLongPlusBehav$lhCortexVol)
+asegLongPlusBehav$RHWBVScaled <- scale(asegLongPlusBehav$rhCortexVol)
+asegLongPlusBehav$RHNAccScaled <- as.numeric(asegLongPlusBehav$RHNAccScaled)
+asegLongPlusBehav$LHNAccScaled <- as.numeric(asegLongPlusBehav$LHNAccScaled)
+asegLongPlusBehav$ETivCrossScaled <- as.numeric(asegLongPlusBehav$ETivCrossScaled)
+asegLongPlusBehav$LHWBVScaled <- as.numeric(asegLongPlusBehav$LHWBVScaled)
+asegLongPlusBehav$RHWBVScaled <- as.numeric(asegLongPlusBehav$RHWBVScaled)
+```
+
+## Make subsets
+```{r}
+asegLongPlusBehavClose <- asegLongPlusBehav %>% dplyr::filter(Type=="Close")
+asegLongPlusBehavFar <- asegLongPlusBehav %>% dplyr::filter(Type=="Far")
+```
+
+## Prep Graphs
+
+```{r, make_theme, echo=FALSE, results='hide', message=FALSE}
+
+beckys.theme.conference = theme(panel.background = element_rect(fill='transparent'), #color="black"
+                        axis.line = element_line(color='black'),
+                        panel.grid.minor = element_line(color='transparent'),
+                        panel.grid.major=element_line(color="transparent"),
+                        axis.title.x = element_text(size=24,face = "bold"),
+                        axis.title.y = element_text(size=24, vjust=1, face = "bold"),
+                        axis.text.x = element_text(size=16, colour="black"),
+                        axis.text.y = element_text(size=16, colour="black"),
+                        legend.text=element_text(size=16),
+                        strip.text.y = element_text(size = 16, face="bold"),
+                        strip.text.x = element_text(size = 16, face="bold"),
+                        legend.title = element_text(face="bold"),
+                        axis.line.x=element_line(color = 'black'), 
+                        axis.line.y=element_line(color = 'black'))
+```
+
+# Subcortical ROIs
+
+## Question 1: Volume
+Does NAcc volume predict reactivity or regulation (accounting for gender, then accounting for ICV, then accounting for WBV)?
+
+```{r}
+## Close
+summary(NAccLHClose <- lmer(LHNAccScaled ~ AgeCent + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccRHClose <- lmer(RHNAccScaled ~ AgeCent + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccLHClose <- lmer(Close ~ LHNAccScaled + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccRHClose <- lmer(Close ~ RHNAccScaled + (1 | ID), data=aseg2TPbehav))
+
+## Far
+summary(NAccLHFar <- lmer(Far ~ LHNAccScaled + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccRHFar <- lmer(Far ~ RHNAccScaled + (1 | ID), data=aseg2TPbehav))
+
+## Close X Age Interaction
+summary(NAccLHCloseInt <- lmer(Close ~ LHNAccScaled*AgeCent + Gender + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccRHCloseInt <- lmer(Close ~ RHNAccScaled*AgeCent + Gender + (1 | ID), data=aseg2TPbehav))
+
+### Not really. 
+## Age predicts NAcc volume
+## Age*NAcc does not predict close scoress. Controlling for Gender and ETivCross doesn't help. 
+```
+
+## Question 2: Rates of change
+Does change in volume predict change in rating? Is there an interaction with age? 
+
+```{r}
+## Close
+## Age and reactivity rate change? 
+summary(lm(CloseAnn ~ Age_T1, data=asegRatePlusBehav))
+
+## Far
+summary(lm(FarAnn ~ Age_T1, data=asegRatePlusBehav))
+
+## Age X NAcc rate change interactions on behavior?
+summary(lm(CloseAnn ~  Right.Accumbens.area*AgeCent_T1 + Gender, data=asegRatePlusBehav))
+
+## Far
+summary(lm(FarAnn ~ Right.Accumbens.area*AgeCent_T1 + Gender, data=asegRatePlusBehav))
+```
+
+## Question 3: Weight Gain and NAcc 
+Are people with smaller NAcc volumes more likely to increase in weight at time 2?
+```{r}
+summary(NAccBMILH <- lm(BMIPerc_T2 ~ BMIPerc_T1*Left.Accumbens.area + Age_T1, data=aseg2TPWideBehav))
+
+summary(NAccBMIRH <- lm(BMIPerc_T2 ~ Right.Accumbens.area*BMIPerc_T1 + Age_T1 + ETivCross, data=aseg2TPWideBehav))
+### this interaction is significant, particularly for right hemisphere. holds up when controlling for age and interaction with age also significant
+
+## how about does BMI predict accumbens volume at T2?
+summary(NAccBMI2 <- lm(Right.Accumbens.area.1 ~ BMIPerc_T1*Right.Accumbens.area + Age_T1 + ETivCross, data=aseg2TPWideBehav))
+
+## does NAcc correlate with BMI Perc controlling for age
+summary(NAccCorr <- lm(Right.Accumbens.area ~ BMIPerc_T1 + Age_T1, data=aseg2TPWideBehav))
+### Nope!
+```
+
+## Prep data to look at NAcc and BMI Percentile
+```{r}
+## Make subset for volume
+BMIPercPlot <- aseg2TPWideBehav %>% dplyr::select(Right.Accumbens.area, Left.Accumbens.area, BMIPerc_T1, BMIPerc_T2, BMIGroup_T1_Reduced, BMIGroup_T2_Reduced, Age_T1, ETivCross, TimeElapsed)
+
+## Make subsets for rate changes
+BMIPercPlotRate <- asegRatePlusBehav %>% dplyr::select(Right.Accumbens.area, Left.Accumbens.area, BMIPerc_T1, BMIPerc_T2, Age_T1)
+
+BMIPercPlotRate$BMIChange <- BMIPercPlotRate$BMIPerc_T1 - BMIPercPlotRate$BMIPerc_T2
+
+BMIPercPlotRate <- BMIPercPlotRate %>% dplyr::mutate(WeightGroup=ifelse(BMIPerc_T1 < 85, 'Healthy', 'Overweight'))
+
+BMIPercPlotRateNoNAs <- BMIPercPlotRate %>% dplyr::filter(complete.cases(.))
+
+BMIPercPlotRate <- asegRatePlusBehav %>% dplyr::select(Right.Accumbens.area, Left.Accumbens.area, BMIPerc_T1, BMIPerc_T2, Age_T1)
+
+BMIPercPlotRate$BMIChange <- BMIPercPlotRate$BMIPerc_T1 - BMIPercPlotRate$BMIPerc_T2
+
+BMIPercPlotRate <- BMIPercPlotRate %>% dplyr::mutate(WeightGroup=ifelse(BMIPerc_T1 < 85, 'Healthy', 'Overweight'))
+
+BMIPercPlotRateNoNAs <- BMIPercPlotRate %>% dplyr::filter(complete.cases(.))
+
+## Remove NAs
+BMIPercPlotNoNAs <- BMIPercPlot %>% dplyr::filter(complete.cases(.))
+NAccBMIRH <- lm(BMIPerc_T2 ~ Right.Accumbens.area*BMIPerc_T1 + Age_T1 + ETivCross, data=BMIPercPlotNoNAs, na.action = na.exclude)
+
+## make BMI change score
+BMIPercPlotNoNAs$BMIChangeAnn <- (BMIPercPlotNoNAs$BMIPerc_T2 - BMIPercPlotNoNAs$BMIPerc_T1)/BMIPercPlotNoNAs$TimeElapsed
+
+### Center for interactions
+BMIPercPlotNoNAs$RHNAccScaled <- scale(BMIPercPlotNoNAs$Right.Accumbens.area)
+BMIPercPlotNoNAs$LHNAccScaled <- scale(BMIPercPlotNoNAs$Left.Accumbens.area)
+BMIPercPlotNoNAs$ETivCrossScaled <- scale(BMIPercPlotNoNAs$ETivCross)
+BMIPercPlotNoNAs$BMIPerc_T1_Scaled <- scale(BMIPercPlotNoNAs$BMIPerc_T1, scale=FALSE)
+
+BMIPercPlotNoNAs$RHNAccScaled <- as.numeric(BMIPercPlotNoNAs$RHNAccScaled)
+BMIPercPlotNoNAs$LHNAccScaled <- as.numeric(BMIPercPlotNoNAs$LHNAccScaled)
+BMIPercPlotNoNAs$ETivCrossScaled <- as.numeric(BMIPercPlotNoNAs$ETivCrossScaled)
+BMIPercPlotNoNAs$BMIPerc_T1_Scaled <- as.numeric(BMIPercPlotNoNAs$BMIPerc_T1_Scaled)
+
+## make low/high distinction for BMI
+BMIPercPlotNoNAs <- BMIPercPlotNoNAs %>% dplyr::mutate(Type=ifelse(BMIPerc_T1 < 85, 'Healthy', 'Overweight'))
+```
+
+Question 4: Volume change and BMI
+```{r}
+summary(NAccBMIRHChange <- lm(BMIChangeAnn ~ Right.Accumbens.area*BMIPerc_T1 + ETivCross, data=BMIPercPlotNoNAs, na.action = na.exclude))
+#### I think I can report on this one... There are only 24 subs and I think that there may be two outliers driving the effects. Need to look at cook's distance I think. 
+
+## Does NAcc at T1 predict increases in BMI at time 2? 
+summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area, data=BMIPercPlotNoNAs))
+## nope not by itself
+
+### How about controlling for BMI
+summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area + BMIPerc_T1, data=BMIPercPlotNoNAs))
+## Closer
+
+## Interaction??
+summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area*BMIPerc_T1, data=BMIPercPlotNoNAs))
+
+summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area*BMIGroup_T1_Reduced, data=BMIPercPlotNoNAs))
+
+summary(NAccBMIRHChangeScaled <- lm(BMIChangeAnn ~ LHNAccScaled*BMIPerc_T1_Scaled + ETivCrossScaled, data=BMIPercPlotNoNAs, na.action = na.exclude))
+
+####
+NAccBMIRHChange <- lm(BMIChangeAnn ~ RHNAccScaled*BMIPerc_T1_Scaled + ETivCross, data=BMIPercPlotNoNAs, na.action = na.exclude)
+summary(NAccBMIRHChange)
+
+NAccBMIRHChangeL <- lm(BMIChangeAnn ~ LHNAccScaled*BMIPerc_T1_Scaled + ETivCross, data=BMIPercPlotNoNAs, na.action = na.exclude)
+summary(NAccBMIRHChangeL)
+####
+
+## Let's look multilevel
+NAccBMI_ML <- lmer(BMIPerc ~ LHNAccScaled + ETivCrossScaled + (1|ID), data=asegLongPlusBehav)
+
+aseg2TPbehav <- aseg2TPbehav %>% mutate(WeightStatus=ifelse(BMIPerc < 85, 0, 1))
+
+## Get residuals for plotting
+BMIPercPlotNoNAs$changeresid <- resid(NAccBMIRHChange)
+BMIPercPlotNoNAs$residval <- resid(NAccBMIRH)
+
+BMIPercPlotNoNAs$changeresid <- as.numeric(BMIPercPlotNoNAs$changeresid)
+BMIPercPlotNoNAs$residval <- as.numeric(BMIPercPlotNoNAs$residval)
+```
+
+BMI Percentile and VS
+```{r}
+## try with two tps 
+summary(NAccBMI_ML2 <- lmer(LHNAccScaled ~ BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav)) #asegLongPlusBehav
+summary(NAccBMI_ML2 <- lmer(RHNAccScaled~ BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+
+summary(NAccBMIPerc_ML2 <- lmer(LHNAccScaled ~ BMIPerc + (1|ID), data=aseg2TPbehav)) #asegLongPlusBehav
+summary(NAccBMIPerc_ML2 <- lmer(RHNAccScaled ~ BMIPerc + (1|ID), data=aseg2TPbehav))
+
+summary(NAccBMI_ML2 <- lmer(LHNAccScaled ~ BMIGroupReduced + (1|ID), data=aseg2TPbehav)) #asegLongPlusBehav
+summary(NAccBMI_ML2 <- lmer(RHNAccScaled ~ BMIGroupReduced + (1|ID), data=aseg2TPbehav)) 
+
+summary(NAccBMI_ML2 <- lmer(LHNAccScaled ~ BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav)) #asegLongPlusBehav
+summary(NAccBMI_ML2 <- lmer(RHNAccScaled ~ BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+
+summary(ETiv <- lmer(ETivCrossScaled ~ BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav)) 
+
+#asegLongPlusBehav
+##### ICV is smaller in this sample of participants too...
+
+NAccBMI_ML3 <- glmer(WeightStatus~ LHNAccScaled + ETivCrossScaled + (1|ID), data=aseg2TPbehav, family="binomial")
+
+## Look by group
+NAccBMIRHChange <- lm(BMIChangeAnn ~ Right.Accumbens.area*Type, data=BMIPercPlotNoNAs, na.action = na.exclude)
+```
+
+Does group predict size?
+```{r}
+NAccBMI <- lm(Right.Accumbens.area ~ Type, data=BMIPercPlotNoNAs, na.action = na.exclude)
+```
+Yes!!! Healthy subs have bigger accumbens (when I look by group)
+```{r}
+NAccBMI <- lm(Left.Accumbens.area.1 ~ BMIGroup_T1, data=aseg2TPWideBehav, na.action = na.exclude)
+```
+BMI group at T1 predict accumbens volume at t2
+
+```{r}
+NAccBMI2 <- lm(Left.Accumbens.area ~  BMIGroup_T1, data=aseg2TPWideBehav, na.action = na.exclude)
+```
+Ok I think I can say something about overweight people having smaller NAccs at both T1 and T2. BMI group at T1 predicts accumbens volume at T2 (and T1). Basically, when you are overweight, you are more likely to have a smaller NAcc. There doesn't seem to be an effect of change in BMI status or Accumbens volume. Treating subs as groups so I can include adults helps. Also, there is no effect of age. This seems to be an age independent effect. This paper replicates the results I'm seeing: Pannacciulli, N., Del Parigi, A., Chen, K., Le, D. S. N. T., Reiman, E. M., & Tataranni, P. A. (2006). Brain abnormalities in human obesity: A voxel-based morphometric study. NeuroImage, 31(4), 1419–1425. https://doi.org/10.1016/j.neuroimage.2006.01.047
+
+```{r}
+summary(NAccBMI4 <- lm(ETivCross ~  BMIGroup_T1, data=aseg2TPWideBehav, na.action = na.exclude))
+```
+also found obesity related to low brain volume, which replicates this study: Raji, C. A., Ho, A. J., Parikshak, N. N., Becker, J. T., Lopez, O. L., Kuller, L. H., … Thompson, P. M. (2010). Brain structure and obesity. Human Brain Mapping, 31(3), 353–364. https://doi.org/10.1002/hbm.20870, and this one: Taki, Y., Kinomura, S., Sato, K., Inoue, K., Goto, R., Okada, K., … Fukuda, H. (2008). Relationship Between Body Mass Index and Gray Matter Volume in 1,428 Healthy Individuals. Obesity, 16(1), 119–124. https://doi.org/10.1038/oby.2007.4
+
+The next step is to look at craving and regulation and NAcc volume...
+```{r}
+NAccCloseBMI <- lm(Left.Accumbens.area ~  BMIGroup_T1*p1Close + Age_T1, data=aseg2TPWideBehav, na.action = na.exclude)
+```
+Yes there is an effect! Effect remains but weakens when I include ETivCross. Adding age as a control helps. This seems to reverse and be more predictive for underweight individuals.
+
+```{r}
+summary(NAccCloseBMI2 <- lm(p1Close ~  BMIGroup_T1_Reduced*Left.Accumbens.area + ETivCross, data=aseg2TPWideBehav, na.action = na.exclude))
+```
+EFfect is weaker when I look at it this way. There is an effect for close but not far.. It gets stronger with ETivCross though. 
+
+```{r}
+summary(NAccCloseBMI2 <- lm(p1Close ~  BMI_T1*Left.Accumbens.area + ETivCross, data=aseg2TPWideBehav, na.action = na.exclude))
+
+## What about change?
+aseg2TPWideBehav$LeftNAccChange <- aseg2TPWideBehav$Left.Accumbens.area - aseg2TPWideBehav$Left.Accumbens.area.1
+aseg2TPWideBehav$RightNAccChange <- aseg2TPWideBehav$Right.Accumbens.area - aseg2TPWideBehav$Right.Accumbens.area.1
+
+NAccBMIChangeClose <- lm(FarDiff ~ RightNAccChange*BMIGroup_T1 + TimeElapsed, data=aseg2TPWideBehav, na.action = na.exclude)
+summary(NAccBMIChangeClose)
+```
+nope, no effect for Close or Far and change...
+
+```{r}
+## what about accumbens change??? Does bmi change relate to accumbens change? 
+BMIPercPlotRate <- asegRatePlusBehav %>% dplyr::select(Right.Accumbens.area, Left.Accumbens.area, BMIPerc_T1, BMIPerc_T2, Age_T1)
+
+BMIPercPlotRate$BMIChange <- BMIPercPlotRate$BMIPerc_T1 - BMIPercPlotRate$BMIPerc_T2
+
+BMIPercPlotRate <- BMIPercPlotRate %>% dplyr::mutate(WeightGroup=ifelse(BMIPerc_T1 < 85, 'Healthy', 'Overweight'))
+
+BMIPercPlotRateNoNAs <- BMIPercPlotRate %>% dplyr::filter(complete.cases(.))
+
+NAccBMI_RateChange <- lm(BMIChange ~ Left.Accumbens.area*BMIPerc_T1, data=BMIPercPlotRateNoNAs)
+
+summary(NAccBMI_RateChange)
+```
+No effects here that I can find.
+
+## Plots
+```{r}
+ggplot(BMIPercPlotNoNAs, aes(x=Right.Accumbens.area, y=BMIChangeAnn, color=Type)) +
+    geom_point(aes(color=Type)) +
+    geom_smooth(method="lm", se=FALSE)
+
+ggplot(BMIPercPlotNoNAs, aes(x=Right.Accumbens.area, y=BMIChangeAnn)) +
+    geom_point(aes(color=Type)) +
+    geom_smooth(method="lm")
+
+
+ggplot(BMIPercPlotNoNAs, aes(x=BMIPerc_T1, y=Right.Accumbens.area)) +
+    geom_point(aes(color=Type)) +
+    geom_smooth(method="lm")
+
+
+## long plotting
+aseg2TPbehav$ID <- as.character(aseg2TPbehav$ID)
+aseg2TPbehav$Phase <- as.character(aseg2TPbehav$Phase)
+
+bmi <- ggplot(aseg2TPbehav, aes(x=BMIPerc, y=Right.Accumbens.area)) + 
+    geom_point(aes(group=ID, color=Phase), alpha=.5) +
+    geom_line(aes(group=ID), color="#e41a1c", alpha=.5) + 
+    beckys.theme.conference + 
+    # theme(legend.position = "none") + 
+    #ylab("Rating of Craving") + 
+    #ylim(1,5) +
+    geom_smooth(color='black', method=lm) 
+    #ggtitle("Craving Decreases With Age")
+bmi
+
+```
+
+## Plot VS and Age
+
+merge lh and rh 
+```{r}
+asegBehavReduced <- aseg2TPbehav %>% dplyr::select(Reactivity=Close, Regulation=Far, Age, ID, Phase, Gender, LH=Left.Accumbens.area, RH=Right.Accumbens.area) %>% gather(key=hemi, value=Volume, -ID, -Reactivity, -Regulation, -Age, -Phase, -Gender)
+```
+
+Plot age and VS
+```{r}
+ggplot(asegBehavReduced, aes(x=Age, y=Volume)) +
+    geom_point(aes(y=Volume), shape=1, size=1, alpha=.2) +
+    geom_line(aes(y=Volume, group=ID), alpha=.2) + 
+    geom_smooth(method='lm', color="black", ) +
+    facet_wrap(~hemi) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    ylab("VS Volume (mm3)") + 
+    xlim(5,26) +
+    #ylim(0,4) +
+    scale_color_brewer(palette="Set1") + scale_fill_brewer(palette="Set1") 
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", #legend.title=element_blank(), strip.text.y = element_text(size = 14, face="bold"),
+                        strip.text.x = element_text(size = 14, face="bold"),)
+
+#ggsave("figures/VSAge.pdf", width=7, height=5, dpi=300)
+```
+
+Reactivity and VS
+```{r}
+ggplot(asegBehavReduced, aes(x=Volume, y=Reactivity)) +
+    geom_point(aes(y=Reactivity, color=Gender), shape=1, size=1, alpha=.3) +
+    geom_line(aes(y=Reactivity, group=ID, color=Gender), alpha=.3) + 
+    geom_smooth(method='lm', color="black", ) +
+    facet_wrap(~hemi) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    #ylab("VS Volume (mm3)") + 
+    #xlim(1,5) +
+    ylim(1,5) +
+    scale_color_brewer(palette="Set1") + scale_fill_brewer(palette="Set1") 
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", #legend.title=element_blank(), strip.text.y = element_text(size = 14, face="bold"),
+                        strip.text.x = element_text(size = 14, face="bold"),)
+
+#ggsave("BehavMainEffects.pdf", width=15, height=5, dpi=300)
+```
+
+Regulation and VS
+```{r}
+ggplot(asegBehavReduced, aes(x=Volume, y=Regulation)) +
+    geom_point(aes(y=Regulation, color=Gender), shape=1, size=1, alpha=.3) +
+    geom_line(aes(y=Regulation, group=ID, color=Gender), alpha=.3) + 
+    geom_smooth(method='lm', color="black", ) +
+    facet_wrap(~hemi) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    #ylab("VS Volume (mm3)") + 
+    #xlim(1,5) +
+    ylim(1,5) +
+    scale_color_brewer(palette="Set1") + scale_fill_brewer(palette="Set1") 
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", #legend.title=element_blank(), strip.text.y = element_text(size = 14, face="bold"),
+                        strip.text.x = element_text(size = 14, face="bold"),)
+
+#ggsave("BehavMainEffects.pdf", width=15, height=5, dpi=300)
+```
+
+Plot BMI Group and VS 
+```{r}
+ggplot(aseg2TPbehav, aes(x=BMIGroup, y=LHNAccScaled)) +
+    geom_jitter(aes(y=LHNAccScaled, color=BMIGroup), width=.1) +
+    #geom_line(aes(y=LHNAccScaled, group=ID, color=BMIGroup)) + 
+    geom_smooth(method='lm', color="black") +
+    beckys.theme.conference +
+    #theme_bw() +
+    #ylab("VS Volume (mm3)") + 
+    #xlim(1,5) +
+    #ylim(1,5) +
+    #scale_color_brewer(palette="Set1") + scale_fill_brewer(palette="Set1") 
+    #scale_color_manual(values=c("#e41a1c", "#377eb8")) + 
+    theme(legend.position="none", strip.text.x = element_text(size = 14, face="bold"),)
+
+##### Plot averages here and average volume
+aseg2TPbehav2 <- aseg2TPbehav %>% filter(BMIGroup!="NA") 
+
+ggplot(aseg2TPbehav2, aes(x=BMIPerc, y=Left.Accumbens.area)) +
+    geom_jitter(aes(y=Left.Accumbens.area, color=BMIGroup), width=.1) +
+    #geom_line(aes(y=LHNAccScaled, group=ID, color=BMIGroup)) + 
+    geom_smooth(method='lm', color="black") +
+    ylab("Left VS Volume (mm3)") + 
+    beckys.theme.conference 
+```
+
+Ok effect of BMI and NAcc on Behavior? 
+```{r}
+## BMI and Close?
+summary(lmer(Close ~ BMIPerc + (1|ID), data=aseg2TPbehav)) # BMI perc show lower reactivity...
+
+summary(lmer(Close ~ BMIGroupReduced + (1|ID), data=aseg2TPbehav)) 
+summary(lmer(Far ~ BMIGroupReduced + (1|ID), data=aseg2TPbehav)) 
+
+summary(lmer(Far ~ BMIPerc + (1|ID), data=aseg2TPbehav)) 
+summary(lmer(Close ~ BMIPerc*AgeCent + (1|ID), data=aseg2TPbehav)) 
+summary(lm(CloseAnn ~ BMIGroup_T1_Reduced*Left.Accumbens.area + AgeCent_T1, data=aseg2TPWideBehav))
+summary(lmer(Close ~ LHNAccScaled + (1|ID), data=aseg2TPbehav))
+summary(lm(Close ~ BMIGroupReduced*Right.Accumbens.area + AgeCent, data=aseg2TPbehav))
+
+summary(closeInt <-  lmer(Close ~ BMIGroupReduced*LHNAccScaled + AgeCent + (1|ID), data=aseg2TPbehav))
+
+residMod <- lmer(Close ~ AgeCent + (1|ID), data=aseg2TPbehav)
+aseg2TPbehav$CloseAgeResid <- resid(residMod)
+```
+
+Best Fit models for age? 
+```{r}
+summary(NAccLHClose <- lmer(LHNAccScaled ~ AgeCent + LHWBVScaled + (1 | ID), data=aseg2TPbehav))
+summary(NAccLHClose <- lmer(RHNAccScaled ~ AgeCent + RHWBVScaled + (1 | ID), data=aseg2TPbehav))
+
+summary(NAccLHClose <- lmer(LHNAccScaled ~ BMIGroupReduced + LHWBVScaled + (1 | ID), data=aseg2TPbehav))
+summary(NAccLHClose <- lmer(RHNAccScaled ~ BMIGroupReduced + RHWBVScaled + (1 | ID), data=aseg2TPbehav))
+
+## Control for age
+summary(NAccLHClose <- lmer(LHNAccScaled ~ BMIGroupReduced + LHWBVScaled + AgeCent + (1 | ID), data=aseg2TPbehav))
+summary(NAccLHClose <- lmer(RHNAccScaled ~ BMIGroupReduced + RHWBVScaled + AgeCent + (1 | ID), data=aseg2TPbehav))
+
+## Linear best fit...ETivCrossScaled, RHWBVScaled
+```
+
+Is there a relationship between whole brain volume and BMI Perc?? (Do heavier people have lower brain volumes overall?)
+```{r wbv-BMIPerc}
+summary(BMIGroupVolLH <- lmer(lhCortexVol ~BMIGroupReduced + (1|ID), data=aseg2TPbehav))
+summary(BMIPercVolLH <- lmer(lhCortexVol ~BMIGroupReduced + (1|ID), data=aseg2TPbehav))
+
+summary(BMIGroupVolRH <- lmer(rhCortexVol ~BMIGroupReduced + (1|ID), data=aseg2TPbehav))
+summary(BMIPercVolRH <- lmer(rhCortexVol ~BMIGroupReduced + (1|ID), data=aseg2TPbehav))
+
+## Control for Age
+summary(BMIGroupVolLHAge <- lmer(lhCortexVol ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+summary(BMIPercVolLHAge <- lmer(lhCortexVol ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+
+summary(BMIGroupVolRHAge <- lmer(rhCortexVol ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+summary(BMIPercVolRHAge <- lmer(rhCortexVol ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+```
+
+Look at this correcting for whole brain volume 
+```{r}
+aseg2TPbehav$LHNAccWBVCorrected <- aseg2TPbehav$Left.Accumbens.area/aseg2TPbehav$lhCortexVol
+
+aseg2TPbehav$RHNAccWBVCorrected <- aseg2TPbehav$Right.Accumbens.area/aseg2TPbehav$rhCortexVol
+```
+
+Now look at NAcc volume and obesity
+```{r}
+summary(BMIGroupVolRHAgeCorrected <- lmer(LHNAccWBVCorrected ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+summary(BMIPercVolRHAgeCorrected <- lmer(RHNAccWBVCorrected ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
+```
+
+
+
+
