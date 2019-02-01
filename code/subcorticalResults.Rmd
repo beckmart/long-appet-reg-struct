@@ -243,7 +243,7 @@ BMIPercPlotNoNAs <- BMIPercPlotNoNAs %>% dplyr::mutate(Type=ifelse(BMIPerc_T1 < 
 Question 4: Volume change and BMI
 ```{r}
 summary(NAccBMIRHChange <- lm(BMIChangeAnn ~ Right.Accumbens.area*BMIPerc_T1 + ETivCross, data=BMIPercPlotNoNAs, na.action = na.exclude))
-#### I think I can report on this one... There are only 24 subs and I think that there may be two outliers driving the effects. Need to look at cook's distance I think. 
+#### I think I can report on this one... There are only 24 subs and I think that there may be two outliers driving the effects. Need to look at cook's distance. 
 
 ## Does NAcc at T1 predict increases in BMI at time 2? 
 summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area, data=BMIPercPlotNoNAs))
@@ -556,6 +556,40 @@ summary(BMIGroupVolRHAgeCorrected <- lmer(LHNAccWBVCorrected ~BMIGroupReduced + 
 summary(BMIPercVolRHAgeCorrected <- lmer(RHNAccWBVCorrected ~BMIGroupReduced + AgeCent + (1|ID), data=aseg2TPbehav))
 ```
 
+## Reviewer Request: Report BMI percentile regressions
+```{r BMIPercReg}
 
+aseg2TPbehavUnder21 <- aseg2TPbehav %>% dplyr::filter(Age < 21)
+
+# LH VS ~ BMI Perc 
+summary(lmer(LHNAccScaled ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+
+# RH VS ~ BMI Perc 
+summary(lmer(RHNAccScaled ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+
+# LH VS ~ BMI Perc + Age
+summary(lmer(LHNAccScaled ~ BMIPerc + AgeCent + (1 | ID), data=aseg2TPbehavUnder21))
+
+# RH VS ~ BMI Perc + Age
+summary(lmer(RHNAccScaled ~ BMIPerc + AgeCent + (1 | ID), data=aseg2TPbehavUnder21))
+
+# LH VS ~ BMI Perc + Gender
+summary(lmer(LHNAccScaled ~ BMIPerc + Gender + (1 | ID), data=aseg2TPbehavUnder21))
+
+# RH VS ~ BMI Perc + Gender
+summary(lmer(RHNAccScaled ~ BMIPerc + Gender + (1 | ID), data=aseg2TPbehavUnder21))
+
+# LH VS ~ BMI Perc + ICV
+summary(lmer(LHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID), data=aseg2TPbehavUnder21))
+
+# RH VS ~ BMI Perc + ICV
+summary(lmer(RHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID), data=aseg2TPbehavUnder21))
+
+# LH VS ~ BMI Perc + WBV
+summary(lmer(LHNAccScaled ~ BMIPerc + LHWBVScaled + (1 | ID), data=aseg2TPbehavUnder21))
+
+# RH VS ~ BMI Perc + WBV
+summary(lmer(RHNAccScaled ~ BMIPerc + RHWBVScaled + (1 | ID), data=aseg2TPbehavUnder21))
+```
 
 

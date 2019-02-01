@@ -55,6 +55,18 @@ appBehavLongRaw <- read.table(file.path(dataDir,"app_behav_long.txt"), header=TR
 asegLong <- read.table(file.path(dataDir,"asegLong.txt"), header=TRUE, sep="\t")
 ```
 
+## Calculate average reactivity score to use as a control for analyses
+
+```{r reactivityScore}
+appBehavLongRaw <- appBehavLongRaw %>% 
+    dplyr::filter(Type == 'Close') %>% 
+    group_by(ID, Phase, Type) %>% 
+    summarize(AvgClose=mean(Rating, na.rm=TRUE)) %>% 
+    ungroup() %>% 
+    dplyr::select(-Type) %>% 
+    right_join(appBehavLongRaw, by=c('ID'='ID', 'Phase'='Phase'))
+```
+
 ## Clean and center data
 
 ```{r}
@@ -140,9 +152,15 @@ summary(bothBehavRes)
 bothBehavResInt <- lmer(Rating ~ Type*AgeCent + (Type | fsid), data=appLongAll)
 summary(bothBehavResInt)
 
-### BMI
+### BMI Group
 summary(BMIClose <- lmer(Close ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
 summary(BMIFar <- lmer(Far ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
+
+### BMI Percentile
+## Filter so age under 21 since BMI perc measurements are not accurate after that age
+aseg2TPbehavUnder21 <- aseg2TPbehav %>% dplyr::filter(Age < 21)
+summary(BMIClosePerc <- lmer(Close ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+summary(BMIFarPerc <- lmer(Far ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
 ```
 
 ## Get fixed effect lines and confidence bands for Close and Far
@@ -275,6 +293,10 @@ summary(closeAnnMod)
 farAnnMod <- lm(FarAnn ~ Age_T1, data=appAvgWide)
 summary(farAnnMod)
 
+# Control for reactivity at time 1
+farAnnModCont <- lm(FarAnn ~ Age_T1 + p1Close, data=appAvgWide)
+summary(farAnnModCont)
+
 ## Nope!!
 
 ## Cool interaction with parent income and close though
@@ -282,4 +304,36 @@ closeAnnParentInc <- lm(CloseAnn ~ Age_T1*ParentIncome_T1, data=appAvgWide)
 summary(closeAnnParentInc)
 ```
 
+
+## What is the best shape of rate of change? 
+```{r}
+closeAnnModSq <- lm(CloseAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appAvgWide)
+closeAnnModCu <- lm(CloseAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appAvgWide)
+
+AIC(closeAnnMod, closeAnnModSq, closeAnnModCu)
+
+farAnnModSq <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appAvgWide)
+farAnnModCu <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appAvgWide)
+
+AIC(farAnnMod, farAnnModSq, farAnnModCu)
+```
+
+## Reviewer Suggestion - Control for reactivity rating
+Here we created an average reactivity score to use as a control for analyses assessing people's regulation abilities. This helps account for an individual's baseline reactivity in relation to how well they are able to regulate. 
+
+```{r FarRatingsControllingforReact}
+## Far Regression
+farBehavResContCloseAvg <- lmer(Rating ~ AgeCent + AvgClose + (1 | fsid), data=appLongFar)  
+summary(farBehavResContCloseAvg)
+
+## Best fit? 
+farBehavResContCloseAvgSQ <- lmer(Rating ~ AgeCent + AgeSq + AvgClose + (1 | fsid), data=appLongFar)
+farBehavResContCloseAvgCu <- lmer(Rating ~ AgeCent + AgeSq + AgeCu + AvgClose + (1 | fsid), data=appLongFar)
+
+AIC(farBehavResContCloseAvg, farBehavResContCloseAvgSQ, farBehavResContCloseAvgCu)
+
+## Is there a significant difference between the model with reactivity and the model without? 
+anova(farBehav, farBehavResContCloseAvg)
+## Linear fit still better
+```
 

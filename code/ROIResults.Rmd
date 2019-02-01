@@ -208,4 +208,91 @@ summary(changethickAge <- lm(parsopercularis_rh_diffAnn ~ Age_T1, data=appWideRO
 summary(changeInt <- lm(FarAnn ~  parsopercularis_rh_diffAnn*AgeCent_T1, data=appWideROIRates))
 ```
 
+#### What is the shape of the rate changes? 
+```{r}
+## rACC
+rACCchangethickAgeNull <- lm(rostralanteriorcingulate_lh_diffAnn ~ 1, data=appWideROIRates)
+rACCchangethickAgeLin <- lm(rostralanteriorcingulate_lh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+rACCchangethickAgeSq <- lm(rostralanteriorcingulate_lh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+rACCchangethickAgeCu <- lm(rostralanteriorcingulate_lh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(rACCchangethickAgeNull, rACCchangethickAgeLin, rACCchangethickAgeSq, rACCchangethickAgeCu)
+
+## dmPFC
+dmPFCchangethickAgeNull <- lm(superiorfrontal_rh_diffAnn ~ 1, data=appWideROIRates)
+dmPFCchangethickAgeLin <- lm(superiorfrontal_rh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+dmPFCchangethickAgeSq <- lm(superiorfrontal_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+dmPFCchangethickAgeCu <- lm(superiorfrontal_rh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(dmPFCchangethickAgeNull, dmPFCchangethickAgeLin, dmPFCchangethickAgeSq, dmPFCchangethickAgeCu)
+
+## dlPFC
+dlPFCchangethickAgeNull <- lm(rostralmiddlefrontal_lh_diffAnn ~ 1, data=appWideROIRates)
+dlPFCchangethickAgeLin <- lm(rostralmiddlefrontal_lh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+dlPFCchangethickAgeSq <- lm(rostralmiddlefrontal_lh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+dlPFCchangethickAgeCu <- lm(rostralmiddlefrontal_lh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(dlPFCchangethickAgeNull, dlPFCchangethickAgeLin, dlPFCchangethickAgeSq, dlPFCchangethickAgeCu)
+
+## vlPFC
+vlPFCchangethickAgeNull <- lm(parsopercularis_rh_diffAnn ~ 1, data=appWideROIRates)
+vlPFCchangethickAgeLin <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+vlPFCchangethickAgeSq <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+vlPFCchangethickAgeCu <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(vlPFCchangethickAgeNull, vlPFCchangethickAgeLin, vlPFCchangethickAgeSq, vlPFCchangethickAgeCu)
+```
+
+#### Plot Rates of Change by ROI
+```{r}
+AparcRename <- appWideROIRates %>% 
+    dplyr::select(fsid, Age_T1, dmPFC=superiorfrontal_rh_diffAnn,
+                  dlPFC=rostralmiddlefrontal_lh_diffAnn,
+                  vlPFC=parsopercularis_rh_diffAnn,
+                  rACC=rostralanteriorcingulate_lh_diffAnn) %>% 
+    gather(key=ROI, value=Thickness, -fsid, -Age_T1)
+
+
+
+ggplot(AparcRename, aes(x=Age_T1, y=Thickness)) +
+    geom_point(aes(y=Thickness), shape=1, size=1, alpha=.4) +
+    geom_smooth(method='lm', color="black") + # linear change
+    #geom_smooth(color="black") +  # let's look nonlinear
+    geom_hline(yintercept = 0) +
+    facet_wrap(~ROI, ncol=6) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    ylab("Annualized Thickness Change") +
+    xlab("Age at T1") +
+    xlim(5, 26) +
+    ylim(-.2,.2)
+    
+
+ggsave("figures/farRateROI4RandR.pdf", width=10, height=6, dpi=300)
+```
+
+#### Do Rates of Change in behav correlate with rates of change in neural regions? 
+```{r}
+summary(rACCchangethickBehav <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn, data=appWideROIRates))
+summary(dmPFCchangethickBehav <- lm(superiorfrontal_rh_diffAnn ~ FarAnn, data=appWideROIRates))
+summary(dlPFCchangethickBehav <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn, data=appWideROIRates))
+summary(vlPFCchangethickBehav <- lm(parsopercularis_rh_diffAnn ~ FarAnn, data=appWideROIRates))
+
+# Nope rates of change in behav don't relate to rates of change in structure
+
+## What about controlling for age? 
+summary(rACCchangethickBehavAge <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+summary(dmPFCchangethickBehavAge <- lm(superiorfrontal_rh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+summary(dlPFCchangethickBehavAge <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+summary(vlPFCchangethickBehavAge <- lm(parsopercularis_rh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+
+# Nope. 
+
+## Interaction with age? 
+## What about controlling for age? 
+summary(rACCchangethickBehaXvAge <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+summary(dmPFCchangethickBehavXAge <- lm(superiorfrontal_rh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+summary(dlPFCchangethickBehavXAge <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+summary(vlPFCchangethickBehavXAge <- lm(parsopercularis_rh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+```
 

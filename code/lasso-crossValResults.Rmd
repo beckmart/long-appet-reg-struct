@@ -243,7 +243,7 @@ This analysis examines the raw data rather than the aggregated data.
 
 The dataset being used (for the paper) is called 'data/AllRegionsRaw.csv' which is the dataset the paper uses. This includes all 62 aparc regions from the DKT atlas (31 per hemisphere).
 
-Note that for the paper we use the "all4" model which includes only the regulation ratings, mean centered age, gender, and the dkt brain regions
+Note that for the paper we use the "all5" model which includes only the regulation ratings, mean centered age, reactivity score, gender, and the dkt brain regions
 
 ## All Regions {#data-all}
 
@@ -281,6 +281,17 @@ We originally intended to use [`cv.glmmLasso`](https://github.com/thepira/cv.glm
 ## All Regions Models {#glmnet-all-regions}
 
 ### Rating All: ageCent, ageSq, AgeCu, Gender, Type, Brain regions
+
+```{r calculate-avg-close-rating}
+allRegions <- allRegions %>% 
+    dplyr::filter(Type == 'Close') %>% 
+    group_by(ID, Phase, Type) %>% 
+    summarize(AvgClose=mean(Rating, na.rm=TRUE)) %>% 
+    ungroup() %>% 
+    dplyr::select(-Type) %>% 
+    right_join(allRegions, by=c('ID'='ID', 'Phase'='Phase'))
+```
+
 
 ```{r all1-mod,dependson=c('model-prep-fit-func','read-data-all', 'region-names-all')}
 set.seed(1234)
@@ -320,14 +331,14 @@ plot(all2$glmnet.fit, xvar = "lambda")
 modelSummary(all2)
 ```
 
-### Far All: ageCent, ageSq, AgeCu, Gender, Brain regions
+### Far All: ageCent, ageSq, AgeCu, Gender, AvgClose Brain regions
 
 ```{r all3-mod,dependson=c('model-prep-fit-func','read-data-all', 'region-names-all')}
 set.seed(1234)
 all3 <- fit_model(data=allRegions %>% filter(Type == 'Far'), 
                   response='Rating',
                   predictors=c('ID', 'AgeCent', 'AgeCentSq', 'AgeCentCu', 
-                               'Gender', regionNames_all),
+                               'Gender', 'AvgClose', regionNames_all),
                   nfolds=10
 )
 ```
@@ -360,45 +371,90 @@ plot(all4$glmnet.fit, xvar = "lambda")
 modelSummary(all4)
 ```
 
-### Fit an `lmer` based on the variables chosen in `all4`
+### Far All: ageCent, Gender, Brain regions, AvgClose
+
+```{r all5-mod,dependson=c('model-prep-fit-func','read-data-all', 'region-names-all')}
+set.seed(1234)
+all5 <- fit_model(data=allRegions %>% filter(Type == 'Far'), 
+                  response='Rating',
+                  predictors=c('ID', 'AgeCent', 'AvgClose',
+                               'Gender', regionNames_all),
+                  nfolds=10
+)
+```
+
+We view the coefficient path, error curve and coefplot for both `lambda.1se` and `lambda.min`.
+
+## Supplemental Fig 3A
+
+```{r all5-error-curve,dependson=c('all5-mod')}
+#pathSimple(all4, elementId='all4_mod')
+plot(all5$glmnet.fit, xvar = "lambda")
+coefpath(all5)
+modelSummary(all5)
+coefSimple(all5, lambda='lambda.1se', sort='magnitude') + 
+    beckys.theme.conference +
+    theme(axis.text.y = element_text(size = 10))
+
+ggsave("figures/bestFitModel.pdf", width=5, height=5, dpi=300)
+```
+
+Compare `all4` and `all5`
+
+```{r}
+all4$cvm[which(all4$lambda == all4$lambda.1se)]
+all5$cvm[which(all5$lambda == all5$lambda.1se)]
+```
+
+Looks like `all5` has a slightly lower MSE so `AvgClose` is helpful
+
+### Fit an `lmer` based on the variables chosen in `all5`
 
 Fit that model and compare with age only.
 
-```{r all4-vs-age-model,dependson=c('read-data-all')}
-chosenVars_all <- coefplot::coefplot(all4, 
+```{r all5-vs-age-model,dependson=c('read-data-all')}
+chosenVars_all <- coefplot::coefplot(all5, 
                                  sort='mag', lambda='lambda.1se', 
                                  plot=FALSE) %>% 
     dplyr::filter(!grepl(pattern='^ID', Coefficient)) %>% 
     dplyr::mutate(Coefficient=factor(Coefficient, 
                                      levels=Coefficient)) %>% 
-    dplyr::filter(abs(Value) > 0.5) %>% 
-    select(Coefficient) %>% 
+    #dplyr::filter(abs(Value) > 0.5) %>% 
+    dplyr::select(Coefficient) %>% 
     filter(!Coefficient %in% c('AgeCent', '(Intercept)')) %>% 
     mutate(Coefficient=as.character(Coefficient)) %>% 
     pull(Coefficient)
 
 null_formula <- Rating ~ 1 + (1 | ID)
-all4NoAge_formula <- build.formula('Rating', chosenVars_all) %>% 
+all5NoAge_formula <- build.formula('Rating', chosenVars_all) %>% 
     update(~ . + (1 | ID))
-all4PlusAge_formula <- build.formula('Rating', chosenVars_all) %>% 
+all5PlusAge_formula <- build.formula('Rating', chosenVars_all) %>% 
     update(~ . + AgeCent + (1 | ID))
 ageOnly_formula <- Rating ~ AgeCent + (1 | ID)
+closeOnly_formula <- Rating ~ AvgClose + (1 | ID)
+agePlusClose_formula <- Rating ~ AgeCent + AvgClose + (1 | ID)
 
 null_mod <- lmer(null_formula, 
                  data=allRegions %>% filter(Type == 'Far') %>% 
                      mutate_at(.vars = chosenVars_all, scale))
-all4NoAge_mod <- lmer(all4NoAge_formula, 
+all5NoAge_mod <- lmer(all5NoAge_formula, 
                         data=allRegions %>% filter(Type == 'Far') %>% 
                      mutate_at(.vars = chosenVars_all, scale))
-all4PlusAge_mod <- lmer(all4PlusAge_formula, 
+all5PlusAge_mod <- lmer(all5PlusAge_formula, 
                           data=allRegions %>% filter(Type == 'Far') %>% 
                      mutate_at(.vars = chosenVars_all, scale))
 ageOnly_mod <- lmer(ageOnly_formula, 
                     data=allRegions %>% filter(Type == 'Far') %>% 
                      mutate_at(.vars = chosenVars_all, scale))
+closeOnly_mod <- lmer(closeOnly_formula, 
+                    data=allRegions %>% filter(Type == 'Far') %>% 
+                     mutate_at(.vars = chosenVars_all, scale))
+agePlusClose_mod <- lmer(agePlusClose_formula, 
+                    data=allRegions %>% filter(Type == 'Far') %>% 
+                     mutate_at(.vars = chosenVars_all, scale))
 
-AIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod)
-BIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod)
+AIC(null_mod, all5NoAge_mod, all5PlusAge_mod, ageOnly_mod, closeOnly_mod, agePlusClose_mod)
+BIC(null_mod, all5NoAge_mod, all5PlusAge_mod, ageOnly_mod, closeOnly_mod, agePlusClose_mod)
 
 # Print list of variables
 chosenVars_all
@@ -406,26 +462,32 @@ chosenVars_all
 
 Now look at Cross-Validation.
 
-```{r all4-vs-age-model-cv,dependson=c('read-data-all','holdout-results-func')}
+```{r all5-vs-age-model-cv,dependson=c('read-data-all','holdout-results-func')}
 set.seed(1234)
 allFolds <- vfold_cv(allRegions %>% filter(Type == 'Far') %>% 
                      mutate_at(.vars = chosenVars_all, scale), V=10, repeats=10)
 
 null_cv <- allFolds$splits %>% 
     purrr::map_df(~holdout_results(.x, 'Rating', null_formula))
-all4NoAge_cv <- allFolds$splits %>% 
-    purrr::map_df(~holdout_results(.x, 'Rating', all4NoAge_formula))
-all4PlusAge_cv <- allFolds$splits %>% 
-    purrr::map_df(~holdout_results(.x, 'Rating', all4PlusAge_formula))
+all5NoAge_cv <- allFolds$splits %>% 
+    purrr::map_df(~holdout_results(.x, 'Rating', all5NoAge_formula))
+all5PlusAge_cv <- allFolds$splits %>% 
+    purrr::map_df(~holdout_results(.x, 'Rating', all5PlusAge_formula))
 ageOnly_cv <- allFolds$splits %>% 
     purrr::map_df(~holdout_results(.x, 'Rating', ageOnly_formula))
+closeOnly_cv <- allFolds$splits %>% 
+    purrr::map_df(~holdout_results(.x, 'Rating', closeOnly_formula))
+agePlusClose_cv <- allFolds$splits %>% 
+    purrr::map_df(~holdout_results(.x, 'Rating', agePlusClose_formula))
 ```
 
-```{r all4-cv-results,dependson=c('all4-vs-age-model-cv')}
+```{r all5-cv-results,dependson=c('all5-vs-age-model-cv')}
 mean(null_cv$error^2)
-mean(all4NoAge_cv$error^2)
-mean(all4PlusAge_cv$error^2)
+mean(all5NoAge_cv$error^2)
+mean(all5PlusAge_cv$error^2)
 mean(ageOnly_cv$error^2)
+mean(closeOnly_cv$error^2)
+mean(agePlusClose_cv$error^2)
 ```
 
 Now we plot the AIC, BIC and MSE.
@@ -446,27 +508,30 @@ evalPlotter <- function(data, metric, modelNames)
 }
 ```
 
-```{r all4-vs-age-model-aic,dependson=c('all4-vs-age-model')}
-modelNames <- c('NULL', 'Brain Only', 'Brian and Age', 'Age Only')
-evalPlotter(AIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod), AIC, modelNames)
+```{r all5-vs-age-model-aic,dependson=c('all5-vs-age-model')}
+modelNames <- c('NULL', 'Brain Only', 'Brain and Age', 'Age Only')
+evalPlotter(AIC(null_mod, all5NoAge_mod, all5PlusAge_mod, agePlusClose_mod), AIC, modelNames)
 ```
 
-```{r all4-vs-age-model-bic,dependson=c('all4-vs-age-model')}
-evalPlotter(BIC(null_mod, all4NoAge_mod, all4PlusAge_mod, ageOnly_mod), BIC, modelNames)
+```{r all5-vs-age-model-bic,dependson=c('all5-vs-age-model')}
+evalPlotter(BIC(null_mod, all5NoAge_mod, all5PlusAge_mod, agePlusClose_mod), BIC, modelNames)
 ```
 
-```{r all4-vs-age-model-mse,dependson=c('all4-vs-age-model-cv')}
+## Supplemental Fig 3B
+
+```{r all5-vs-age-model-mse,dependson=c('all5-vs-age-model-cv')}
 mseDF <- tibble::tibble(
     Model=modelNames,
     MSE=c(
         mean(null_cv$error^2),
-        mean(all4NoAge_cv$error^2),
-        mean(all4PlusAge_cv$error^2),
-        mean(ageOnly_cv$error^2)
+        mean(all5NoAge_cv$error^2),
+        mean(all5PlusAge_cv$error^2),
+        mean(agePlusClose_cv$error^2)
     )
 )
 
 evalPlotter(mseDF, MSE, modelNames)
+ggsave("figures/LassoModCompare.pdf", width=4.5, height=5, dpi=300)
 ```
 
 Look at sjPlots of the models.
@@ -477,5 +542,13 @@ sjPlot::plot_model(all4NoAge_mod, sort.est=TRUE) + beckys.theme.conference
 sjPlot::plot_model(all4PlusAge_mod, sort.est=TRUE) + beckys.theme.conference
 sjPlot::plot_model(ageOnly_mod, sort.est=TRUE) + beckys.theme.conference
 ```
+Note that sjPlot changed and this code doesn't work anymore
 
+
+Likelihood ratio test of top two models
+```{r likelihoodRatioTest}
+
+anova(agePlusClose_mod, all5PlusAge_mod)
+anova(all5NoAge_mod, all5PlusAge_mod)
+```
 
