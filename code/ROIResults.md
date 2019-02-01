@@ -253,9 +253,12 @@ summary(cubModrAcc <- lmer(rostralanteriorcingulate_lh ~ AgeCent + AgeCentSq + A
 AIC(nullModrAcc, linModrAcc, quadModrAcc, cubModrAcc)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"15.126862","_rn_":"nullModrAcc"},{"1":"4","2":"-1.138642","_rn_":"linModrAcc"},{"1":"5","2":"12.160883","_rn_":"quadModrAcc"},{"1":"6","2":"26.375141","_rn_":"cubModrAcc"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|             |   df|        AIC|
+|-------------|----:|----------:|
+| nullModrAcc |    3|  15.126862|
+| linModrAcc  |    4|  -1.138642|
+| quadModrAcc |    5|  12.160883|
+| cubModrAcc  |    6|  26.375141|
 
 #### dmPFC
 
@@ -392,9 +395,12 @@ summary(cubModdmPFC <- lmer(superiorfrontal_rh ~ AgeCent + AgeCentSq + AgeCentCu
 AIC(nullModdmPFC, linModdmPFC, quadModdmPFC, cubModdmPFC)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"-70.04486","_rn_":"nullModdmPFC"},{"1":"4","2":"-100.75008","_rn_":"linModdmPFC"},{"1":"5","2":"-86.28984","_rn_":"quadModdmPFC"},{"1":"6","2":"-81.28673","_rn_":"cubModdmPFC"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|              |   df|         AIC|
+|--------------|----:|-----------:|
+| nullModdmPFC |    3|   -70.04486|
+| linModdmPFC  |    4|  -100.75008|
+| quadModdmPFC |    5|   -86.28984|
+| cubModdmPFC  |    6|   -81.28673|
 
 #### dlPFC
 
@@ -532,9 +538,12 @@ summary(cubModdlPFC <- lmer(rostralmiddlefrontal_lh ~ AgeCent + AgeCentSq + AgeC
 AIC(nullModdlPFC, linModdlPFC, quadModdlPFC, cubModdlPFC)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"-24.024502","_rn_":"nullModdlPFC"},{"1":"4","2":"-38.423693","_rn_":"linModdlPFC"},{"1":"5","2":"-26.487938","_rn_":"quadModdlPFC"},{"1":"6","2":"-9.317424","_rn_":"cubModdlPFC"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|              |   df|         AIC|
+|--------------|----:|-----------:|
+| nullModdlPFC |    3|  -24.024501|
+| linModdlPFC  |    4|  -38.423693|
+| quadModdlPFC |    5|  -26.487938|
+| cubModdlPFC  |    6|   -9.317424|
 
 #### vlPFC
 
@@ -671,9 +680,12 @@ summary(cubModvlPFC <- lmer(parsopercularis_rh ~ AgeCent + AgeCentSq + AgeCentCu
 AIC(nullModvlPFC, linModvlPFC, quadModvlPFC, cubModvlPFC)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"-41.57940","_rn_":"nullModvlPFC"},{"1":"4","2":"-58.90453","_rn_":"linModvlPFC"},{"1":"5","2":"-46.34736","_rn_":"quadModvlPFC"},{"1":"6","2":"-28.89453","_rn_":"cubModvlPFC"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|              |   df|        AIC|
+|--------------|----:|----------:|
+| nullModvlPFC |    3|  -41.57940|
+| linModvlPFC  |    4|  -58.90453|
+| quadModvlPFC |    5|  -46.34736|
+| cubModvlPFC  |    6|  -28.89453|
 
 ### Rates of change
 
@@ -1016,9 +1028,12 @@ rACCchangethickAgeCu <- lm(rostralanteriorcingulate_lh_diffAnn ~ Age_T1 + AgedCe
 AIC(rACCchangethickAgeNull, rACCchangethickAgeLin, rACCchangethickAgeSq, rACCchangethickAgeCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-98.19017","_rn_":"rACCchangethickAgeNull"},{"1":"3","2":"-96.53115","_rn_":"rACCchangethickAgeLin"},{"1":"4","2":"-96.58302","_rn_":"rACCchangethickAgeSq"},{"1":"5","2":"-95.69997","_rn_":"rACCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                        |   df|        AIC|
+|------------------------|----:|----------:|
+| rACCchangethickAgeNull |    2|  -98.19017|
+| rACCchangethickAgeLin  |    3|  -96.53115|
+| rACCchangethickAgeSq   |    4|  -96.58303|
+| rACCchangethickAgeCu   |    5|  -95.69997|
 
 ``` r
 ## dmPFC
@@ -1030,9 +1045,12 @@ dmPFCchangethickAgeCu <- lm(superiorfrontal_rh_diffAnn ~ Age_T1 + AgedCentSq_T1 
 AIC(dmPFCchangethickAgeNull, dmPFCchangethickAgeLin, dmPFCchangethickAgeSq, dmPFCchangethickAgeCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-169.6798","_rn_":"dmPFCchangethickAgeNull"},{"1":"3","2":"-168.2198","_rn_":"dmPFCchangethickAgeLin"},{"1":"4","2":"-174.3851","_rn_":"dmPFCchangethickAgeSq"},{"1":"5","2":"-172.4441","_rn_":"dmPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                         |   df|        AIC|
+|-------------------------|----:|----------:|
+| dmPFCchangethickAgeNull |    2|  -169.6798|
+| dmPFCchangethickAgeLin  |    3|  -168.2198|
+| dmPFCchangethickAgeSq   |    4|  -174.3851|
+| dmPFCchangethickAgeCu   |    5|  -172.4441|
 
 ``` r
 ## dlPFC
@@ -1044,9 +1062,12 @@ dlPFCchangethickAgeCu <- lm(rostralmiddlefrontal_lh_diffAnn ~ Age_T1 + AgedCentS
 AIC(dlPFCchangethickAgeNull, dlPFCchangethickAgeLin, dlPFCchangethickAgeSq, dlPFCchangethickAgeCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-107.9529","_rn_":"dlPFCchangethickAgeNull"},{"1":"3","2":"-107.1831","_rn_":"dlPFCchangethickAgeLin"},{"1":"4","2":"-106.6535","_rn_":"dlPFCchangethickAgeSq"},{"1":"5","2":"-107.9159","_rn_":"dlPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                         |   df|        AIC|
+|-------------------------|----:|----------:|
+| dlPFCchangethickAgeNull |    2|  -107.9529|
+| dlPFCchangethickAgeLin  |    3|  -107.1831|
+| dlPFCchangethickAgeSq   |    4|  -106.6535|
+| dlPFCchangethickAgeCu   |    5|  -107.9159|
 
 ``` r
 ## vlPFC
@@ -1058,9 +1079,12 @@ vlPFCchangethickAgeCu <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1 + AgedCentSq
 AIC(vlPFCchangethickAgeNull, vlPFCchangethickAgeLin, vlPFCchangethickAgeSq, vlPFCchangethickAgeCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-125.8227","_rn_":"vlPFCchangethickAgeNull"},{"1":"3","2":"-125.9410","_rn_":"vlPFCchangethickAgeLin"},{"1":"4","2":"-124.0794","_rn_":"vlPFCchangethickAgeSq"},{"1":"5","2":"-123.5906","_rn_":"vlPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                         |   df|        AIC|
+|-------------------------|----:|----------:|
+| vlPFCchangethickAgeNull |    2|  -125.8227|
+| vlPFCchangethickAgeLin  |    3|  -125.9410|
+| vlPFCchangethickAgeSq   |    4|  -124.0794|
+| vlPFCchangethickAgeCu   |    5|  -123.5906|
 
 #### Plot Rates of Change by ROI
 
