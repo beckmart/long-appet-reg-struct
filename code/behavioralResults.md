@@ -501,9 +501,12 @@ anova(closeNull, closeBehav, closeBehavSq, closeBehavCu)
 
     ## refitting model(s) with ML (instead of REML)
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["BIC"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["logLik"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["deviance"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Chisq"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Chi Df"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Pr(>Chisq)"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"5917.773","3":"5934.284","4":"-2955.886","5":"5911.773","6":"NA","7":"NA","8":"NA","_rn_":"closeNull"},{"1":"4","2":"5906.310","3":"5928.325","4":"-2949.155","5":"5898.310","6":"13.463163","7":"1","8":"0.0002432933","_rn_":"closeBehav"},{"1":"5","2":"5902.721","3":"5930.240","4":"-2946.360","5":"5892.721","6":"5.589141","7":"1","8":"0.0180721578","_rn_":"closeBehavSq"},{"1":"6","2":"5900.979","3":"5934.003","4":"-2944.490","5":"5888.979","6":"3.741026","7":"1","8":"0.0530918342","_rn_":"closeBehavCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|              |   Df|       AIC|       BIC|     logLik|  deviance|      Chisq|  Chi Df|  Pr(&gt;Chisq)|
+|--------------|----:|---------:|---------:|----------:|---------:|----------:|-------:|--------------:|
+| closeNull    |    3|  5917.773|  5934.284|  -2955.886|  5911.773|         NA|      NA|             NA|
+| closeBehav   |    4|  5906.310|  5928.325|  -2949.155|  5898.310|  13.463163|       1|      0.0002433|
+| closeBehavSq |    5|  5902.721|  5930.240|  -2946.360|  5892.721|   5.589141|       1|      0.0180722|
+| closeBehavCu |    6|  5900.979|  5934.003|  -2944.490|  5888.979|   3.741026|       1|      0.0530918|
 
 ``` r
 ## Far Regression
@@ -517,9 +520,12 @@ anova(farNull, farBehav, farBehavSq, farBehavCu)
 
     ## refitting model(s) with ML (instead of REML)
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["BIC"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["logLik"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["deviance"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Chisq"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Chi Df"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Pr(>Chisq)"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"5730.725","3":"5747.208","4":"-2862.362","5":"5724.725","6":"NA","7":"NA","8":"NA","_rn_":"farNull"},{"1":"4","2":"5666.090","3":"5688.068","4":"-2829.045","5":"5658.090","6":"66.6346113","7":"1","8":"3.267975e-16","_rn_":"farBehav"},{"1":"5","2":"5667.821","3":"5695.293","4":"-2828.911","5":"5657.821","6":"0.2693488","7":"1","8":"6.037690e-01","_rn_":"farBehavSq"},{"1":"6","2":"5669.502","3":"5702.469","4":"-2828.751","5":"5657.502","6":"0.3190203","7":"1","8":"5.721970e-01","_rn_":"farBehavCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|            |   Df|       AIC|       BIC|     logLik|  deviance|       Chisq|  Chi Df|  Pr(&gt;Chisq)|
+|------------|----:|---------:|---------:|----------:|---------:|-----------:|-------:|--------------:|
+| farNull    |    3|  5730.725|  5747.208|  -2862.362|  5724.725|          NA|      NA|             NA|
+| farBehav   |    4|  5666.090|  5688.068|  -2829.045|  5658.090|  66.6346113|       1|       0.000000|
+| farBehavSq |    5|  5667.821|  5695.293|  -2828.911|  5657.821|   0.2693488|       1|       0.603769|
+| farBehavCu |    6|  5669.502|  5702.469|  -2828.751|  5657.502|   0.3190203|       1|       0.572197|
 
 Look at Annualized Change
 =========================
@@ -674,9 +680,11 @@ closeAnnModCu <- lm(CloseAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=
 AIC(closeAnnMod, closeAnnModSq, closeAnnModCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"41.58151","_rn_":"closeAnnMod"},{"1":"4","2":"41.86558","_rn_":"closeAnnModSq"},{"1":"5","2":"43.76794","_rn_":"closeAnnModCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|               |   df|       AIC|
+|---------------|----:|---------:|
+| closeAnnMod   |    3|  41.58151|
+| closeAnnModSq |    4|  41.86558|
+| closeAnnModCu |    5|  43.76794|
 
 ``` r
 farAnnModSq <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appAvgWide)
@@ -685,9 +693,11 @@ farAnnModCu <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appA
 AIC(farAnnMod, farAnnModSq, farAnnModCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"67.05141","_rn_":"farAnnMod"},{"1":"4","2":"68.91029","_rn_":"farAnnModSq"},{"1":"5","2":"70.79175","_rn_":"farAnnModCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|             |   df|       AIC|
+|-------------|----:|---------:|
+| farAnnMod   |    3|  67.05141|
+| farAnnModSq |    4|  68.91029|
+| farAnnModCu |    5|  70.79175|
 
 Reviewer Suggestion - Control for reactivity rating
 ---------------------------------------------------
@@ -738,9 +748,11 @@ farBehavResContCloseAvgCu <- lmer(Rating ~ AgeCent + AgeSq + AgeCu + AvgClose + 
 AIC(farBehavResContCloseAvg, farBehavResContCloseAvgSQ, farBehavResContCloseAvgCu)
 ```
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"5","2":"5634.604","_rn_":"farBehavResContCloseAvg"},{"1":"6","2":"5643.848","_rn_":"farBehavResContCloseAvgSQ"},{"1":"7","2":"5656.755","_rn_":"farBehavResContCloseAvgCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                           |   df|       AIC|
+|---------------------------|----:|---------:|
+| farBehavResContCloseAvg   |    5|  5634.604|
+| farBehavResContCloseAvgSQ |    6|  5643.848|
+| farBehavResContCloseAvgCu |    7|  5656.755|
 
 ``` r
 ## Is there a significant difference between the model with reactivity and the model without? 
@@ -749,9 +761,10 @@ anova(farBehav, farBehavResContCloseAvg)
 
     ## refitting model(s) with ML (instead of REML)
 
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["BIC"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["logLik"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["deviance"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Chisq"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Chi Df"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Pr(>Chisq)"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"4","2":"5666.090","3":"5688.068","4":"-2829.045","5":"5658.090","6":"NA","7":"NA","8":"NA","_rn_":"farBehav"},{"1":"5","2":"5621.185","3":"5648.657","4":"-2805.592","5":"5611.185","6":"46.90552","7":"1","8":"7.449259e-12","_rn_":"farBehavResContCloseAvg"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
+|                         |   Df|       AIC|       BIC|     logLik|  deviance|     Chisq|  Chi Df|  Pr(&gt;Chisq)|
+|-------------------------|----:|---------:|---------:|----------:|---------:|---------:|-------:|--------------:|
+| farBehav                |    4|  5666.090|  5688.068|  -2829.045|  5658.090|        NA|      NA|             NA|
+| farBehavResContCloseAvg |    5|  5621.185|  5648.657|  -2805.592|  5611.185|  46.90552|       1|              0|
 
 ``` r
 ## Linear fit still better
