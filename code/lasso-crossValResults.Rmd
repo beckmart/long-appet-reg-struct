@@ -534,14 +534,14 @@ evalPlotter(mseDF, MSE, modelNames)
 #ggsave("figures/LassoModCompare.pdf", width=4.5, height=5, dpi=300)
 ```
 
-Look at sjPlots of the models.
+<!-- Look at sjPlots of the models. -->
 
-```{r all-sjplots,dependson=c('all4-vs-age-model')}
-#sjPlot::plot_model(null_mod, sort.est=TRUE)
-sjPlot::plot_model(all4NoAge_mod, sort.est=TRUE) + beckys.theme.conference
-sjPlot::plot_model(all4PlusAge_mod, sort.est=TRUE) + beckys.theme.conference
-sjPlot::plot_model(ageOnly_mod, sort.est=TRUE) + beckys.theme.conference
-```
+<!-- ```{r all-sjplots,dependson=c('all4-vs-age-model')} -->
+<!-- #sjPlot::plot_model(null_mod, sort.est=TRUE) -->
+<!-- sjPlot::plot_model(all4NoAge_mod, sort.est=TRUE) + beckys.theme.conference -->
+<!-- sjPlot::plot_model(all4PlusAge_mod, sort.est=TRUE) + beckys.theme.conference -->
+<!-- sjPlot::plot_model(ageOnly_mod, sort.est=TRUE) + beckys.theme.conference -->
+<!-- ``` -->
 Note that sjPlot changed and this code doesn't work anymore
 
 
