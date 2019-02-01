@@ -4,7 +4,7 @@ author: "Rebecca Martin"
 date: "6/23/2018"
 output: 
     github_document:
-        df_print: 'paged'
+        df_print: 'kable'
         toc: true
         dev: png
     html_document:
