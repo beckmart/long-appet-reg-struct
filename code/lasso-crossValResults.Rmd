@@ -396,7 +396,7 @@ coefSimple(all5, lambda='lambda.1se', sort='magnitude') +
     beckys.theme.conference +
     theme(axis.text.y = element_text(size = 10))
 
-ggsave("figures/bestFitModel.pdf", width=5, height=5, dpi=300)
+#ggsave("figures/bestFitModel.pdf", width=5, height=5, dpi=300)
 ```
 
 Compare `all4` and `all5`
@@ -531,7 +531,7 @@ mseDF <- tibble::tibble(
 )
 
 evalPlotter(mseDF, MSE, modelNames)
-ggsave("figures/LassoModCompare.pdf", width=4.5, height=5, dpi=300)
+#ggsave("figures/LassoModCompare.pdf", width=4.5, height=5, dpi=300)
 ```
 
 Look at sjPlots of the models.

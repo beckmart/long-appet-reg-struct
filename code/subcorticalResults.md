@@ -16,6 +16,7 @@ Rebecca Martin
     -   [Prep data to look at NAcc and BMI Percentile](#prep-data-to-look-at-nacc-and-bmi-percentile)
     -   [Plots](#plots)
     -   [Plot VS and Age](#plot-vs-and-age)
+    -   [Reviewer Request: Report BMI percentile regressions](#reviewer-request-report-bmi-percentile-regressions)
 
 Note: this script needs to be proofread and cleaned up and is not a final version
 
@@ -707,7 +708,7 @@ summary(NAccBMIRHChange <- lm(BMIChangeAnn ~ Right.Accumbens.area*BMIPerc_T1 + E
     ## F-statistic:  6.15 on 4 and 22 DF,  p-value: 0.001767
 
 ``` r
-#### I think I can report on this one... There are only 24 subs and I think that there may be two outliers driving the effects. Need to look at cook's distance I think. 
+#### I think I can report on this one... There are only 24 subs and I think that there may be two outliers driving the effects. Need to look at cook's distance. 
 
 ## Does NAcc at T1 predict increases in BMI at time 2? 
 summary(bmichange <- lm(BMIChangeAnn ~ Right.Accumbens.area, data=BMIPercPlotNoNAs))
@@ -2595,3 +2596,342 @@ summary(BMIPercVolRHAgeCorrected <- lmer(RHNAccWBVCorrected ~BMIGroupReduced + A
     ##             (Intr) BMIGrR
     ## BMIGrpRdcdv -0.315       
     ## AgeCent     -0.030  0.097
+
+Reviewer Request: Report BMI percentile regressions
+---------------------------------------------------
+
+``` r
+aseg2TPbehavUnder21 <- aseg2TPbehav %>% dplyr::filter(Age < 21)
+
+# LH VS ~ BMI Perc 
+summary(lmer(LHNAccScaled ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: LHNAccScaled ~ BMIPerc + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 165
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.71058 -0.33228  0.02384  0.42340  1.62769 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.8881   0.9424  
+    ##  Residual             0.1238   0.3518  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error         df t value Pr(>|t|)
+    ## (Intercept)  0.0360577  0.2488418 66.5976739   0.145    0.885
+    ## BMIPerc     -0.0001852  0.0031460 57.7144947  -0.059    0.953
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr)
+    ## BMIPerc -0.786
+
+``` r
+# RH VS ~ BMI Perc 
+summary(lmer(RHNAccScaled ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: RHNAccScaled ~ BMIPerc + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 147.3
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.55575 -0.40613 -0.00619  0.40594  1.73534 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.95326  0.9764  
+    ##  Residual             0.06235  0.2497  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)
+    ## (Intercept) 4.528e-02  2.201e-01 6.674e+01   0.206    0.838
+    ## BMIPerc     7.721e-04  2.501e-03 4.430e+01   0.309    0.759
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr)
+    ## BMIPerc -0.707
+
+``` r
+# LH VS ~ BMI Perc + Age
+summary(lmer(LHNAccScaled ~ BMIPerc + AgeCent + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: LHNAccScaled ~ BMIPerc + AgeCent + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 167
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.61967 -0.38277 -0.01116  0.34865  1.47832 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.8896   0.9432  
+    ##  Residual             0.1148   0.3388  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error         df t value Pr(>|t|)  
+    ## (Intercept) -0.0928944  0.2537606 65.9414126  -0.366   0.7155  
+    ## BMIPerc      0.0003913  0.0030812 54.4261047   0.127   0.8994  
+    ## AgeCent     -0.0531673  0.0291320 62.4024532  -1.825   0.0728 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr) BMIPrc
+    ## BMIPerc -0.771       
+    ## AgeCent  0.261 -0.079
+
+``` r
+# RH VS ~ BMI Perc + Age
+summary(lmer(RHNAccScaled ~ BMIPerc + AgeCent + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: RHNAccScaled ~ BMIPerc + AgeCent + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 151.3
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.42494 -0.43039  0.00464  0.40249  1.64301 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.94644  0.9729  
+    ##  Residual             0.06169  0.2484  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error         df t value Pr(>|t|)
+    ## (Intercept) -0.0140138  0.2241412 65.9866159  -0.063    0.950
+    ## BMIPerc      0.0008754  0.0024905 43.2033280   0.351    0.727
+    ## AgeCent     -0.0305852  0.0243280 51.2006269  -1.257    0.214
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr) BMIPrc
+    ## BMIPerc -0.697       
+    ## AgeCent  0.209 -0.031
+
+``` r
+# LH VS ~ BMI Perc + Gender
+summary(lmer(LHNAccScaled ~ BMIPerc + Gender + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: LHNAccScaled ~ BMIPerc + Gender + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 161.2
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.67420 -0.38229  0.00875  0.37018  1.67526 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.8184   0.9046  
+    ##  Residual             0.1224   0.3499  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error         df t value Pr(>|t|)  
+    ## (Intercept) -0.2558291  0.2813015 64.4376256  -0.909   0.3665  
+    ## BMIPerc      0.0006815  0.0031238 57.6352178   0.218   0.8281  
+    ## GenderM      0.6538841  0.3112065 39.4325573   2.101   0.0421 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr) BMIPrc
+    ## BMIPerc -0.752       
+    ## GenderM -0.507  0.151
+
+``` r
+# RH VS ~ BMI Perc + Gender
+summary(lmer(RHNAccScaled ~ BMIPerc + Gender + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: RHNAccScaled ~ BMIPerc + Gender + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 145.9
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.54682 -0.38721 -0.04202  0.42585  1.76939 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.93639  0.9677  
+    ##  Residual             0.06206  0.2491  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)
+    ## (Intercept) -0.136694   0.257470 64.177800  -0.531    0.597
+    ## BMIPerc      0.001144   0.002509 43.703641   0.456    0.651
+    ## GenderM      0.435331   0.322828 39.407695   1.348    0.185
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr) BMIPrc
+    ## BMIPerc -0.659       
+    ## GenderM -0.527  0.115
+
+``` r
+# LH VS ~ BMI Perc + ICV
+summary(lmer(LHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: LHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 168.4
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.65238 -0.31935  0.02263  0.33412  1.56782 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.8953   0.9462  
+    ##  Residual             0.1307   0.3615  
+    ## Number of obs: 68, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##                   Estimate Std. Error         df t value Pr(>|t|)
+    ## (Intercept)      0.0478879  0.2537606 64.7158608   0.189    0.851
+    ## BMIPerc         -0.0003613  0.0032378 54.4730745  -0.112    0.912
+    ## ETivCrossScaled -0.0059636  0.0594122 27.3748245  -0.100    0.921
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) BMIPrc
+    ## BMIPerc     -0.792       
+    ## ETvCrssScld -0.074  0.125
+
+``` r
+# RH VS ~ BMI Perc + ICV
+summary(lmer(RHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: RHNAccScaled ~ BMIPerc + ETivCrossScaled + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 145.8
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.31832 -0.40401 -0.00552  0.38019  1.29980 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.96397  0.9818  
+    ##  Residual             0.05239  0.2289  
+    ## Number of obs: 68, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##                  Estimate Std. Error        df t value Pr(>|t|)
+    ## (Intercept)     -0.008557   0.214729 64.857639  -0.040    0.968
+    ## BMIPerc          0.001456   0.002375 38.833119   0.613    0.543
+    ## ETivCrossScaled -0.007620   0.038956 26.929424  -0.196    0.846
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) BMIPrc
+    ## BMIPerc     -0.686       
+    ## ETvCrssScld -0.083  0.149
+
+``` r
+# LH VS ~ BMI Perc + WBV
+summary(lmer(LHNAccScaled ~ BMIPerc + LHWBVScaled + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: LHNAccScaled ~ BMIPerc + LHWBVScaled + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 142
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.47774 -0.54664  0.02945  0.40006  1.31565 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.54015  0.735   
+    ##  Residual             0.09988  0.316   
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept) -0.270087   0.214667 65.997974  -1.258    0.213    
+    ## BMIPerc      0.003596   0.002783 57.382635   1.292    0.201    
+    ## LHWBVScaled  0.658509   0.117721 50.470834   5.594 9.06e-07 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) BMIPrc
+    ## BMIPerc     -0.823       
+    ## LHWBVScaled -0.281  0.276
+
+``` r
+# RH VS ~ BMI Perc + WBV
+summary(lmer(RHNAccScaled ~ BMIPerc + RHWBVScaled + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: RHNAccScaled ~ BMIPerc + RHWBVScaled + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 128.8
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.43593 -0.43372  0.03757  0.43194  1.79110 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.62938  0.7933  
+    ##  Residual             0.05366  0.2316  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept) -0.121206   0.192655 65.915802  -0.629    0.531    
+    ## BMIPerc      0.002504   0.002282 44.854415   1.097    0.279    
+    ## RHWBVScaled  0.555447   0.110871 61.563312   5.010 4.87e-06 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) BMIPrc
+    ## BMIPerc     -0.748       
+    ## RHWBVScaled -0.198  0.186

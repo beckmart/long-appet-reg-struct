@@ -6,6 +6,7 @@ Rebecca Martin
 -   [Settings](#settings)
 -   [Packages](#packages)
 -   [Read in data](#read-in-data)
+-   [Calculate average reactivity score to use as a control for analyses](#calculate-average-reactivity-score-to-use-as-a-control-for-analyses)
 -   [Clean and center data](#clean-and-center-data)
 -   [Prep Graphs](#prep-graphs)
 -   [Graphing](#graphing)
@@ -19,12 +20,14 @@ Rebecca Martin
     -   [Make Data Long](#make-data-long)
     -   [Plot Annualized Change](#plot-annualized-change)
     -   [Does annualized change differ with age?](#does-annualized-change-differ-with-age)
+    -   [What is the best shape of rate of change?](#what-is-the-best-shape-of-rate-of-change)
+    -   [Reviewer Suggestion - Control for reactivity rating](#reviewer-suggestion---control-for-reactivity-rating)
 
 Settings
 --------
 
 ``` r
-knitr::opts_chunk$set(cache=TRUE)
+#knitr::opts_chunk$set(cache=TRUE)
 ```
 
 ``` r
@@ -56,6 +59,19 @@ appBehavLongRaw <- read.table(file.path(dataDir,"app_behav_long.txt"), header=TR
 
 # For BMI measurements
 asegLong <- read.table(file.path(dataDir,"asegLong.txt"), header=TRUE, sep="\t")
+```
+
+Calculate average reactivity score to use as a control for analyses
+-------------------------------------------------------------------
+
+``` r
+appBehavLongRaw <- appBehavLongRaw %>% 
+    dplyr::filter(Type == 'Close') %>% 
+    group_by(ID, Phase, Type) %>% 
+    summarize(AvgClose=mean(Rating, na.rm=TRUE)) %>% 
+    ungroup() %>% 
+    dplyr::select(-Type) %>% 
+    right_join(appBehavLongRaw, by=c('ID'='ID', 'Phase'='Phase'))
 ```
 
 Clean and center data
@@ -262,7 +278,7 @@ summary(bothBehavResInt)
     ## TypFr:AgCnt -0.013  0.024 -0.566
 
 ``` r
-### BMI
+### BMI Group
 summary(BMIClose <- lmer(Close ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
 ```
 
@@ -328,6 +344,73 @@ summary(BMIFar <- lmer(Far ~ BMIGroupReduced + (1 | ID), data=aseg2TPbehav))
     ## Correlation of Fixed Effects:
     ##             (Intr)
     ## BMIGrpRdcdv -0.492
+
+``` r
+### BMI Percentile
+## Filter so age under 21 since BMI perc measurements are not accurate after that age
+aseg2TPbehavUnder21 <- aseg2TPbehav %>% dplyr::filter(Age < 21)
+summary(BMIClosePerc <- lmer(Close ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: Close ~ BMIPerc + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 143
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.1179 -0.4312 -0.0068  0.4708  2.3847 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.2150   0.4637  
+    ##  Residual             0.2276   0.4771  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept)  4.035985   0.190298 54.355840  21.209   <2e-16 ***
+    ## BMIPerc     -0.005418   0.002662 59.033964  -2.035   0.0463 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr)
+    ## BMIPerc -0.871
+
+``` r
+summary(BMIFarPerc <- lmer(Far ~ BMIPerc + (1 | ID), data=aseg2TPbehavUnder21))
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: Far ~ BMIPerc + (1 | ID)
+    ##    Data: aseg2TPbehavUnder21
+    ## 
+    ## REML criterion at convergence: 175
+    ## 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.18031 -0.57468 -0.09197  0.52979  2.28878 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  ID       (Intercept) 0.09089  0.3015  
+    ##  Residual             0.55032  0.7418  
+    ## Number of obs: 69, groups:  ID, 41
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept)  3.439541   0.218404 46.304203   15.75   <2e-16 ***
+    ## BMIPerc     -0.004993   0.003101 48.855534   -1.61    0.114    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##         (Intr)
+    ## BMIPerc -0.885
 
 Get fixed effect lines and confidence bands for Close and Far
 -------------------------------------------------------------
@@ -526,6 +609,32 @@ summary(farAnnMod)
     ## F-statistic: 0.7099 on 1 and 47 DF,  p-value: 0.4037
 
 ``` r
+# Control for reactivity at time 1
+farAnnModCont <- lm(FarAnn ~ Age_T1 + p1Close, data=appAvgWide)
+summary(farAnnModCont)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = FarAnn ~ Age_T1 + p1Close, data = appAvgWide)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -0.7818 -0.2895 -0.0232  0.2982  1.1176 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  0.77585    0.50153   1.547    0.129  
+    ## Age_T1      -0.01933    0.01391  -1.389    0.171  
+    ## p1Close     -0.17799    0.10538  -1.689    0.098 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.4518 on 46 degrees of freedom
+    ## Multiple R-squared:  0.07241,    Adjusted R-squared:  0.03208 
+    ## F-statistic: 1.795 on 2 and 46 DF,  p-value: 0.1775
+
+``` r
 ## Nope!!
 
 ## Cool interaction with parent income and close though
@@ -554,3 +663,96 @@ summary(closeAnnParentInc)
     ##   (10 observations deleted due to missingness)
     ## Multiple R-squared:  0.1887, Adjusted R-squared:  0.1192 
     ## F-statistic: 2.714 on 3 and 35 DF,  p-value: 0.05963
+
+What is the best shape of rate of change?
+-----------------------------------------
+
+``` r
+closeAnnModSq <- lm(CloseAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appAvgWide)
+closeAnnModCu <- lm(CloseAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appAvgWide)
+
+AIC(closeAnnMod, closeAnnModSq, closeAnnModCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"41.58151","_rn_":"closeAnnMod"},{"1":"4","2":"41.86558","_rn_":"closeAnnModSq"},{"1":"5","2":"43.76794","_rn_":"closeAnnModCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+farAnnModSq <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appAvgWide)
+farAnnModCu <- lm(FarAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appAvgWide)
+
+AIC(farAnnMod, farAnnModSq, farAnnModCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"3","2":"67.05141","_rn_":"farAnnMod"},{"1":"4","2":"68.91029","_rn_":"farAnnModSq"},{"1":"5","2":"70.79175","_rn_":"farAnnModCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+Reviewer Suggestion - Control for reactivity rating
+---------------------------------------------------
+
+Here we created an average reactivity score to use as a control for analyses assessing people's regulation abilities. This helps account for an individual's baseline reactivity in relation to how well they are able to regulate.
+
+``` r
+## Far Regression
+farBehavResContCloseAvg <- lmer(Rating ~ AgeCent + AvgClose + (1 | fsid), data=appLongFar)  
+summary(farBehavResContCloseAvg)
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: Rating ~ AgeCent + AvgClose + (1 | fsid)
+    ##    Data: appLongFar
+    ## 
+    ## REML criterion at convergence: 5624.6
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.2148 -0.7235  0.0366  0.6983  2.8961 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  fsid     (Intercept) 0.2887   0.5374  
+    ##  Residual             1.2504   1.1182  
+    ## Number of obs: 1798, groups:  fsid, 49
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept)   1.10295    0.26766 370.16389   4.121 4.66e-05 ***
+    ## AgeCent      -0.09378    0.01443  91.14252  -6.499 4.21e-09 ***
+    ## AvgClose      0.48535    0.07007 538.95796   6.926 1.23e-11 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##          (Intr) AgeCnt
+    ## AgeCent  -0.247       
+    ## AvgClose -0.953  0.267
+
+``` r
+## Best fit? 
+farBehavResContCloseAvgSQ <- lmer(Rating ~ AgeCent + AgeSq + AvgClose + (1 | fsid), data=appLongFar)
+farBehavResContCloseAvgCu <- lmer(Rating ~ AgeCent + AgeSq + AgeCu + AvgClose + (1 | fsid), data=appLongFar)
+
+AIC(farBehavResContCloseAvg, farBehavResContCloseAvgSQ, farBehavResContCloseAvgCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"5","2":"5634.604","_rn_":"farBehavResContCloseAvg"},{"1":"6","2":"5643.848","_rn_":"farBehavResContCloseAvgSQ"},{"1":"7","2":"5656.755","_rn_":"farBehavResContCloseAvgCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+## Is there a significant difference between the model with reactivity and the model without? 
+anova(farBehav, farBehavResContCloseAvg)
+```
+
+    ## refitting model(s) with ML (instead of REML)
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["BIC"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["logLik"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["deviance"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["Chisq"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["Chi Df"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["Pr(>Chisq)"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"4","2":"5666.090","3":"5688.068","4":"-2829.045","5":"5658.090","6":"NA","7":"NA","8":"NA","_rn_":"farBehav"},{"1":"5","2":"5621.185","3":"5648.657","4":"-2805.592","5":"5611.185","6":"46.90552","7":"1","8":"7.449259e-12","_rn_":"farBehavResContCloseAvg"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+## Linear fit still better
+```

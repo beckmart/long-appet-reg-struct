@@ -18,6 +18,9 @@ Rebecca Martin
         -   [dmPFC](#dmpfc-1)
         -   [dlPFC](#dlpfc-1)
         -   [vlPFC](#vlpfc-1)
+        -   [What is the shape of the rate changes?](#what-is-the-shape-of-the-rate-changes)
+        -   [Plot Rates of Change by ROI](#plot-rates-of-change-by-roi)
+        -   [Do Rates of Change in behav correlate with rates of change in neural regions?](#do-rates-of-change-in-behav-correlate-with-rates-of-change-in-neural-regions)
 
 Note: this is not a final version and should be cleaned and proofread.
 
@@ -1000,3 +1003,396 @@ summary(changeInt <- lm(FarAnn ~  parsopercularis_rh_diffAnn*AgeCent_T1, data=ap
     ## Residual standard error: 0.4683 on 45 degrees of freedom
     ## Multiple R-squared:  0.02539,    Adjusted R-squared:  -0.03958 
     ## F-statistic: 0.3908 on 3 and 45 DF,  p-value: 0.7602
+
+#### What is the shape of the rate changes?
+
+``` r
+## rACC
+rACCchangethickAgeNull <- lm(rostralanteriorcingulate_lh_diffAnn ~ 1, data=appWideROIRates)
+rACCchangethickAgeLin <- lm(rostralanteriorcingulate_lh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+rACCchangethickAgeSq <- lm(rostralanteriorcingulate_lh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+rACCchangethickAgeCu <- lm(rostralanteriorcingulate_lh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(rACCchangethickAgeNull, rACCchangethickAgeLin, rACCchangethickAgeSq, rACCchangethickAgeCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-98.19017","_rn_":"rACCchangethickAgeNull"},{"1":"3","2":"-96.53115","_rn_":"rACCchangethickAgeLin"},{"1":"4","2":"-96.58302","_rn_":"rACCchangethickAgeSq"},{"1":"5","2":"-95.69997","_rn_":"rACCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+## dmPFC
+dmPFCchangethickAgeNull <- lm(superiorfrontal_rh_diffAnn ~ 1, data=appWideROIRates)
+dmPFCchangethickAgeLin <- lm(superiorfrontal_rh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+dmPFCchangethickAgeSq <- lm(superiorfrontal_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+dmPFCchangethickAgeCu <- lm(superiorfrontal_rh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(dmPFCchangethickAgeNull, dmPFCchangethickAgeLin, dmPFCchangethickAgeSq, dmPFCchangethickAgeCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-169.6798","_rn_":"dmPFCchangethickAgeNull"},{"1":"3","2":"-168.2198","_rn_":"dmPFCchangethickAgeLin"},{"1":"4","2":"-174.3851","_rn_":"dmPFCchangethickAgeSq"},{"1":"5","2":"-172.4441","_rn_":"dmPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+## dlPFC
+dlPFCchangethickAgeNull <- lm(rostralmiddlefrontal_lh_diffAnn ~ 1, data=appWideROIRates)
+dlPFCchangethickAgeLin <- lm(rostralmiddlefrontal_lh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+dlPFCchangethickAgeSq <- lm(rostralmiddlefrontal_lh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+dlPFCchangethickAgeCu <- lm(rostralmiddlefrontal_lh_diffAnn ~ Age_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(dlPFCchangethickAgeNull, dlPFCchangethickAgeLin, dlPFCchangethickAgeSq, dlPFCchangethickAgeCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-107.9529","_rn_":"dlPFCchangethickAgeNull"},{"1":"3","2":"-107.1831","_rn_":"dlPFCchangethickAgeLin"},{"1":"4","2":"-106.6535","_rn_":"dlPFCchangethickAgeSq"},{"1":"5","2":"-107.9159","_rn_":"dlPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+``` r
+## vlPFC
+vlPFCchangethickAgeNull <- lm(parsopercularis_rh_diffAnn ~ 1, data=appWideROIRates)
+vlPFCchangethickAgeLin <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1, data=appWideROIRates)
+vlPFCchangethickAgeSq <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1, data=appWideROIRates)
+vlPFCchangethickAgeCu <- lm(parsopercularis_rh_diffAnn ~ AgeCent_T1 + AgedCentSq_T1 + AgedCentCu_T1, data=appWideROIRates)
+
+AIC(vlPFCchangethickAgeNull, vlPFCchangethickAgeLin, vlPFCchangethickAgeSq, vlPFCchangethickAgeCu)
+```
+
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["df"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["AIC"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"2","2":"-125.8227","_rn_":"vlPFCchangethickAgeNull"},{"1":"3","2":"-125.9410","_rn_":"vlPFCchangethickAgeLin"},{"1":"4","2":"-124.0794","_rn_":"vlPFCchangethickAgeSq"},{"1":"5","2":"-123.5906","_rn_":"vlPFCchangethickAgeCu"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+
+#### Plot Rates of Change by ROI
+
+``` r
+AparcRename <- appWideROIRates %>% 
+    dplyr::select(fsid, Age_T1, dmPFC=superiorfrontal_rh_diffAnn,
+                  dlPFC=rostralmiddlefrontal_lh_diffAnn,
+                  vlPFC=parsopercularis_rh_diffAnn,
+                  rACC=rostralanteriorcingulate_lh_diffAnn) %>% 
+    gather(key=ROI, value=Thickness, -fsid, -Age_T1)
+
+
+
+ggplot(AparcRename, aes(x=Age_T1, y=Thickness)) +
+    geom_point(aes(y=Thickness), shape=1, size=1, alpha=.4) +
+    geom_smooth(method='lm', color="black") + # linear change
+    #geom_smooth(color="black") +  # let's look nonlinear
+    geom_hline(yintercept = 0) +
+    facet_wrap(~ROI, ncol=6) + 
+    beckys.theme.conference +
+    #theme_bw() +
+    ylab("Annualized Thickness Change") +
+    xlab("Age at T1") +
+    xlim(5, 26) +
+    ylim(-.2,.2)
+```
+
+    ## Warning: Removed 2 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2 rows containing missing values (geom_point).
+
+![](ROIResults_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
+``` r
+#ggsave("figures/farRateROI4RandR.pdf", width=10, height=6, dpi=300)
+```
+
+#### Do Rates of Change in behav correlate with rates of change in neural regions?
+
+``` r
+summary(rACCchangethickBehav <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralanteriorcingulate_lh_diffAnn ~ FarAnn, data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.16299 -0.03464 -0.00794  0.03018  0.43748 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)  0.01824    0.01314   1.388    0.172
+    ## FarAnn      -0.01977    0.02722  -0.726    0.471
+    ## 
+    ## Residual standard error: 0.0866 on 47 degrees of freedom
+    ## Multiple R-squared:  0.0111, Adjusted R-squared:  -0.009937 
+    ## F-statistic: 0.5277 on 1 and 47 DF,  p-value: 0.4712
+
+``` r
+summary(dmPFCchangethickBehav <- lm(superiorfrontal_rh_diffAnn ~ FarAnn, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = superiorfrontal_rh_diffAnn ~ FarAnn, data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.079181 -0.026270 -0.007078  0.020391  0.127286 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept) 0.019478   0.006365   3.060  0.00365 **
+    ## FarAnn      0.003668   0.013186   0.278  0.78212   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.04195 on 47 degrees of freedom
+    ## Multiple R-squared:  0.001643,   Adjusted R-squared:  -0.0196 
+    ## F-statistic: 0.07737 on 1 and 47 DF,  p-value: 0.7821
+
+``` r
+summary(dlPFCchangethickBehav <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralmiddlefrontal_lh_diffAnn ~ FarAnn, data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.207222 -0.039512  0.006334  0.048597  0.171925 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  0.02358    0.01188   1.985    0.053 .
+    ## FarAnn       0.01951    0.02461   0.793    0.432  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.07831 on 47 degrees of freedom
+    ## Multiple R-squared:  0.01319,    Adjusted R-squared:  -0.007808 
+    ## F-statistic: 0.6281 on 1 and 47 DF,  p-value: 0.432
+
+``` r
+summary(vlPFCchangethickBehav <- lm(parsopercularis_rh_diffAnn ~ FarAnn, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = parsopercularis_rh_diffAnn ~ FarAnn, data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.189954 -0.046331  0.000891  0.038100  0.122604 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 0.041171   0.009898   4.160 0.000134 ***
+    ## FarAnn      0.016574   0.020503   0.808 0.422972    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.06524 on 47 degrees of freedom
+    ## Multiple R-squared:  0.01371,    Adjusted R-squared:  -0.007273 
+    ## F-statistic: 0.6534 on 1 and 47 DF,  p-value: 0.423
+
+``` r
+# Nope rates of change in behav don't relate to rates of change in structure
+
+## What about controlling for age? 
+summary(rACCchangethickBehavAge <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralanteriorcingulate_lh_diffAnn ~ FarAnn + AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.14595 -0.04056 -0.00951  0.02930  0.43009 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)  0.018240   0.013218   1.380    0.174
+    ## FarAnn      -0.022005   0.027587  -0.798    0.429
+    ## AgeCent_T1  -0.001684   0.002537  -0.664    0.510
+    ## 
+    ## Residual standard error: 0.08712 on 46 degrees of freedom
+    ## Multiple R-squared:  0.02048,    Adjusted R-squared:  -0.0221 
+    ## F-statistic: 0.481 on 2 and 46 DF,  p-value: 0.6213
+
+``` r
+summary(dmPFCchangethickBehavAge <- lm(superiorfrontal_rh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = superiorfrontal_rh_diffAnn ~ FarAnn + AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.070658 -0.024794 -0.007438  0.023446  0.123593 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)  0.0194775  0.0064015   3.043  0.00387 **
+    ## FarAnn       0.0025503  0.0133606   0.191  0.84946   
+    ## AgeCent_T1  -0.0008424  0.0012287  -0.686  0.49640   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.04219 on 46 degrees of freedom
+    ## Multiple R-squared:  0.01174,    Adjusted R-squared:  -0.03123 
+    ## F-statistic: 0.2733 on 2 and 46 DF,  p-value: 0.7621
+
+``` r
+summary(dlPFCchangethickBehavAge <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralmiddlefrontal_lh_diffAnn ~ FarAnn + AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.208560 -0.036993  0.007269  0.040870  0.167169 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)  0.023578   0.011881   1.984   0.0532 .
+    ## FarAnn       0.016488   0.024798   0.665   0.5094  
+    ## AgeCent_T1  -0.002275   0.002281  -0.997   0.3238  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.07831 on 46 degrees of freedom
+    ## Multiple R-squared:  0.03408,    Adjusted R-squared:  -0.007921 
+    ## F-statistic: 0.8114 on 2 and 46 DF,  p-value: 0.4505
+
+``` r
+summary(vlPFCchangethickBehavAge <- lm(parsopercularis_rh_diffAnn ~ FarAnn + AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = parsopercularis_rh_diffAnn ~ FarAnn + AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.197754 -0.040794 -0.003324  0.043685  0.117901 
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  0.041169   0.009814   4.195 0.000123 ***
+    ## FarAnn       0.013219   0.020483   0.645 0.521912    
+    ## AgeCent_T1  -0.002529   0.001884  -1.343 0.185994    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.06469 on 46 degrees of freedom
+    ## Multiple R-squared:  0.0509, Adjusted R-squared:  0.009637 
+    ## F-statistic: 1.234 on 2 and 46 DF,  p-value: 0.3007
+
+``` r
+# Nope. 
+
+## Interaction with age? 
+## What about controlling for age? 
+summary(rACCchangethickBehaXvAge <- lm(rostralanteriorcingulate_lh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralanteriorcingulate_lh_diffAnn ~ FarAnn * AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -0.13698 -0.04748 -0.00624  0.02637  0.43182 
+    ## 
+    ## Coefficients:
+    ##                    Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)        0.017339   0.013430   1.291    0.203
+    ## FarAnn            -0.022417   0.027816  -0.806    0.425
+    ## AgeCent_T1        -0.002187   0.002727  -0.802    0.427
+    ## FarAnn:AgeCent_T1 -0.003049   0.005737  -0.532    0.598
+    ## 
+    ## Residual standard error: 0.08781 on 45 degrees of freedom
+    ## Multiple R-squared:  0.02659,    Adjusted R-squared:  -0.0383 
+    ## F-statistic: 0.4098 on 3 and 45 DF,  p-value: 0.7467
+
+``` r
+summary(dmPFCchangethickBehavXAge <- lm(superiorfrontal_rh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = superiorfrontal_rh_diffAnn ~ FarAnn * AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.075699 -0.021986 -0.005626  0.024041  0.122620 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)        0.0199842  0.0064970   3.076  0.00356 **
+    ## FarAnn             0.0027819  0.0134566   0.207  0.83715   
+    ## AgeCent_T1        -0.0005595  0.0013191  -0.424  0.67345   
+    ## FarAnn:AgeCent_T1  0.0017148  0.0027754   0.618  0.53979   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.04248 on 45 degrees of freedom
+    ## Multiple R-squared:  0.02006,    Adjusted R-squared:  -0.04527 
+    ## F-statistic: 0.307 on 3 and 45 DF,  p-value: 0.8202
+
+``` r
+summary(dlPFCchangethickBehavXAge <- lm(rostralmiddlefrontal_lh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = rostralmiddlefrontal_lh_diffAnn ~ FarAnn * AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.210754 -0.029489  0.002397  0.045705  0.172078 
+    ## 
+    ## Coefficients:
+    ##                    Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)        0.024869   0.012013   2.070   0.0442 *
+    ## FarAnn             0.017078   0.024882   0.686   0.4960  
+    ## AgeCent_T1        -0.001554   0.002439  -0.637   0.5273  
+    ## FarAnn:AgeCent_T1  0.004368   0.005132   0.851   0.3992  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.07855 on 45 degrees of freedom
+    ## Multiple R-squared:  0.04938,    Adjusted R-squared:  -0.01399 
+    ## F-statistic: 0.7792 on 3 and 45 DF,  p-value: 0.5118
+
+``` r
+summary(vlPFCchangethickBehavXAge <- lm(parsopercularis_rh_diffAnn ~ FarAnn*AgeCent_T1, data=appWideROIRates))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = parsopercularis_rh_diffAnn ~ FarAnn * AgeCent_T1, 
+    ##     data = appWideROIRates)
+    ## 
+    ## Residuals:
+    ##       Min        1Q    Median        3Q       Max 
+    ## -0.196682 -0.042435  0.001424  0.043701  0.118293 
+    ## 
+    ## Coefficients:
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)        0.0414265  0.0099982   4.143 0.000149 ***
+    ## FarAnn             0.0133365  0.0207083   0.644 0.522835    
+    ## AgeCent_T1        -0.0023855  0.0020299  -1.175 0.246110    
+    ## FarAnn:AgeCent_T1  0.0008707  0.0042710   0.204 0.839381    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.06537 on 45 degrees of freedom
+    ## Multiple R-squared:  0.05178,    Adjusted R-squared:  -0.01144 
+    ## F-statistic: 0.8191 on 3 and 45 DF,  p-value: 0.4902
